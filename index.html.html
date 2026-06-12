@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>elboshy store - Ultimate Cloud V8</title>
+    
+    <meta name="theme-color" content="#2c3e50">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #2c3e50; --secondary: #34495e; --accent: #1abc9c;
+            --bg: #f4f6f7; --white: #ffffff; --danger: #e74c3c;
+            --success: #27ae60; --warning: #f39c12; --text: #2c3e50; --border: #bdc3c7;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; padding: 0; background-color: var(--bg); color: var(--text); overscroll-behavior-y: contain; }
+
+        /* Cloud Loader Styles */
+        #cloud-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 62, 80, 0.95); color: white;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; text-align: center;
+        }
+        .spinner {
+            width: 60px; height: 60px; border: 6px solid rgba(255,255,255,0.2);
+            border-radius: 50%; border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .login-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex; justify-content: center; align-items: center; z-index: 3000;
+        }
+        .login-box {
+            background: var(--white); padding: 40px; border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; width: 90%; max-width: 350px;
+        }
+        .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid var(--border); border-radius: 5px; }
+        .login-box button { width: 100%; padding: 12px; margin-top:15px; background: var(--accent); color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight:bold; }
+
+        .app-container { display: flex; height: 100vh; position: relative; flex-direction: column; }
+        .main-wrapper { display: flex; flex: 1; overflow: hidden; }
+        
+        .top-header {
+            background: var(--white); padding: 10px 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between; align-items: center; z-index: 600; position: relative;
+        }
+        .top-header select { padding: 8px; border-radius: 5px; font-size: 16px; font-weight: bold; border: 1px solid var(--accent); color: var(--primary); background: #f0fdfa; outline: none; }
+        .top-header h3 { margin: 0; display: flex; align-items: center; gap: 10px; }
+
+        .sidebar { 
+            width: 260px; background: var(--primary); color: white; 
+            display: flex; flex-direction: column; overflow-y: auto; 
+            transition: all 0.3s ease; z-index: 500; height: 100%;
+        }
+        .logo { padding: 20px; font-size: 16px; font-weight: bold; text-align: center; background: var(--secondary); border-bottom: 1px solid #46637f; display: flex; justify-content: center; align-items: center; flex-direction: column; line-height: 1.4; gap: 5px; }
+        .logo i { font-size: 24px; color: var(--accent); }
+        .sidebar nav button {
+            background: none; border: none; color: #ecf0f1; width: 100%; padding: 12px 20px;
+            text-align: right; font-size: 14px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px;
+        }
+        .sidebar nav button:hover, .sidebar nav button.active { background: var(--accent); }
+        
+        .content { flex: 1; padding: 30px; overflow-y: auto; width: 100%; padding-bottom: 90px; }
+        #mobile-menu-btn { display: none; background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 5px; font-size: 18px; cursor: pointer; }
+
+        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .form-group-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        input, select, button, textarea { padding: 10px; border: 1px solid var(--border); border-radius: 5px; outline: none; }
+        .row { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        .row > * { flex: 1; }
+        .w-100 { width: 100%; }
+        .mt-20 { margin-top: 20px; }
+
+        .btn-primary { background: var(--accent); color: white; cursor: pointer; border: none; }
+        .btn-secondary { background: var(--secondary); color: white; cursor: pointer; border: none; }
+        .btn-success { background: var(--success); color: white; cursor: pointer; border: none; }
+        .btn-warning { background: var(--warning); color: white; cursor: pointer; border: none; }
+        .btn-danger { background: var(--danger); color: white; cursor: pointer; border: none; }
+        .btn-excel { background: #217346; color: white; cursor: pointer; border: none; }
+        .btn-pdf { background: #b30b00; color: white; cursor: pointer; border: none; }
+        .btn-small { padding: 5px 15px; font-size: 0.9em; }
+
+        .table-responsive {
+            width: 100%; overflow-x: auto; overflow-y: auto; max-height: 70vh; 
+            border: 2px solid #bdc3c7; -webkit-overflow-scrolling: touch; 
+            position: relative; margin-top: 15px; background: white;
+        }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--white); min-width: 800px; margin-top: 0; }
+        th, td { padding: 12px; text-align: right; border-bottom: 1px solid #eee; border-right: 1px solid #eee; }
+        th { background: var(--secondary); color: white; white-space: nowrap; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 2px rgba(0,0,0,0.1); }
+        tr:hover td { background-color: #f1f2f6; }
+        .qty-input-table { width: 100px !important; padding: 5px !important; text-align: center; border: 2px solid var(--accent) !important; font-weight: bold; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+        .stat-card span { display: block; font-size: 24px; font-weight: bold; margin-top: 10px; }
+        .c-blue { border-top: 4px solid #3498db; } .c-green { border-top: 4px solid #2ecc71; } .c-orange { border-top: 4px solid #f39c12; } .c-red { border-top: 4px solid #e74c3c; } .c-purple { border-top: 4px solid #9b59b6; }
+
+        .permit-form { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .item-entry-line { background: #f8f9fa; padding: 15px; border-radius: 5px; align-items: center; border: 1px dashed var(--accent); }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; overflow-y: auto; padding: 20px; }
+        .modal-content { background: white; width: 95%; max-width: 900px; padding: 20px; border-radius: 8px; position: relative; margin: auto; }
+        .close-modal { position: absolute; left: 20px; top: 10px; font-size: 30px; cursor: pointer; color:var(--danger); }
+        .permit-view-images img { max-width: 100%; height: auto; margin: 10px; border: 1px solid #ddd; padding: 5px; }
+
+        .badge-pending { background: #fef9e7; color: #f39c12; padding: 5px 10px; border-radius: 4px; font-size: 0.9em; font-weight:bold; border: 1px solid #f39c12;}
+        .badge-danger { background: #fdedec; color: #c0392b; padding: 3px 8px; border-radius: 4px; font-size: 0.8em; font-weight:bold; border: 1px solid #e74c3c; white-space: nowrap;}
+        .user-tag { font-size: 0.7em; background: #eee; padding: 2px 6px; border-radius: 4px; color: #555; }
+
+        .chart-container { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-top: 20px; height: 300px; }
+        .advanced-filter-box { background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .settings-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #eee; }
+
+        .bottom-nav {
+            display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: var(--white); box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000; overflow-x: auto; white-space: nowrap; height: 65px; border-top: 1px solid #eee; flex-wrap: nowrap; justify-content: flex-start; -webkit-overflow-scrolling: touch;
+        }
+        .bottom-nav button {
+            background: none; border: none; display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 5px 10px; min-width: 75px; flex-shrink: 0; color: #95a5a6; font-size: 11px; height: 100%; cursor: pointer;
+        }
+        .bottom-nav button i { font-size: 20px; margin-bottom: 4px; }
+        .bottom-nav button.active { color: var(--accent); border-top: 3px solid var(--accent); background: #f0fdfa; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none !important; position: absolute; left:0; top:0; z-index: 2000; width: 260px; box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
+            #mobile-menu-btn { display: inline-block; }
+            .bottom-nav { display: flex; }
+            .content { padding: 15px; padding-bottom: 85px; margin-top: 0; }
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #modal-overlay, #modal-overlay * { visibility: visible; }
+            #modal-overlay { position: absolute; left: 0; top: 0; width: 100%; background: transparent; padding:0; display:block !important; }
+            .modal-content { width: 100%; max-width: none; box-shadow: none; border: none; margin: 0; padding: 0; }
+            .no-print { display: none !important; }
+            .table-responsive { max-height: none !important; overflow: visible !important; border: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cloud-loader">
+        <div class="spinner"></div>
+        <h2 id="cloud-loader-msg" style="font-weight:normal;">جاري الاتصال بالسحابة...</h2>
+    </div>
+
+    <div id="login-screen" class="login-container" style="display:none;">
+        <div class="login-box">
+            <h2><i class="fa-solid fa-boxes-stacked" style="color:var(--accent);"></i> elboshy store</h2>
+            <p id="login-msg" style="color:#555;">تسجيل الدخول للمنظومة</p>
+            <input type="text" id="username-input" placeholder="اسم المستخدم">
+            <input type="password" id="password-input" placeholder="كلمة المرور">
+            <button onclick="app.login()"><i class="fa-solid fa-right-to-bracket"></i> دخول</button>
+            <p id="setup-hint" style="display:none; color: #e74c3c; font-size: 0.9em; margin-top:15px; font-weight:bold;">أول مرة؟ سيتم إنشاء هذا الحساب كمدير بصلاحيات كاملة.</p>
+        </div>
+    </div>
+
+    <div id="main-app" class="app-container" style="display:none;">
+        
+        <div class="top-header no-print">
+            <h3>
+                <button id="mobile-menu-btn" onclick="app.toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+                <i class="fa-solid fa-warehouse" style="color:var(--accent);"></i>
+                المخزن النشط:
+                <select id="global-wh-selector" onchange="app.switchWarehouse(this.value)"></select>
+            </h3>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <button onclick="app.refreshData()" class="btn-primary btn-small" title="تحديث وسحب أحدث البيانات" style="border-radius:5px;"><i class="fa-solid fa-arrows-rotate"></i> تحديث</button>
+                <div style="position:relative; cursor:pointer;" onclick="app.showNotifications()" title="إشعارات وتنبيهات المخزن">
+                    <i class="fa-solid fa-bell" style="font-size:22px; color:var(--warning);"></i>
+                    <span id="wh-notifications-badge" style="position:absolute; top:-5px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px; display:none;">0</span>
+                </div>
+                <span id="current-user-display" style="font-weight:bold; color:var(--secondary); font-size:0.9em;"></span>
+            </div>
+        </div>
+
+        <div class="main-wrapper">
+            <aside class="sidebar no-print" id="sidebar">
+                <div class="logo">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>elboshy store</span>
+                    <span style="font-size:11px; font-weight:normal; color:#bdc3c7;">by. Ahmed Abubakr Mahmoud</span>
+                </div>
+                <nav>
+                    <button onclick="app.navigate('dashboard')" class="active"><i class="fa-solid fa-chart-pie"></i> لوحة التحكم</button>
+                    <button onclick="app.navigate('items')"><i class="fa-solid fa-box-open"></i> إدارة الأصناف</button>
+                    <button onclick="app.navigate('warehouses')"><i class="fa-solid fa-building"></i> إدارة المخازن والمواقع</button>
+                    <button onclick="app.navigate('permits_entry')"><i class="fa-solid fa-file-circle-plus"></i> إدخال إذن جديد</button>
+                    <button onclick="app.navigate('purchase_orders')" style="color:#1abc9c;"><i class="fa-solid fa-cart-shopping"></i> طلبيات الشراء</button>
+                    <button onclick="app.navigate('pending_transfers')" style="color:#f1c40f;"><i class="fa-solid fa-bell"></i> التحويلات الواردة <span id="pending-badge" style="background:red;color:white;border-radius:50%;padding:2px 6px;font-size:11px;display:none;">0</span></button>
+                    <button onclick="app.navigate('permits_manage')"><i class="fa-solid fa-list-check"></i> أرشيف الأذون والتعديل</button>
+                    <button onclick="app.navigate('stock_balance')"><i class="fa-solid fa-scale-balanced"></i> كشف رصيد الأصناف</button>
+                    <button onclick="app.navigate('damage_report')" style="color:#e74c3c;"><i class="fa-solid fa-triangle-exclamation"></i> سجل التوالف والصيانة</button>
+                    <button onclick="app.navigate('item_card')"><i class="fa-solid fa-file-invoice"></i> كارتة الصنف</button>
+                    <button onclick="app.navigate('consumption')"><i class="fa-solid fa-chart-line"></i> استهلاك المستهلكات</button>
+                    <button onclick="app.navigate('total_movement')"><i class="fa-solid fa-right-left"></i> إجمالي حركة الأصناف</button>
+                    <button onclick="app.navigate('transfers_check')"><i class="fa-solid fa-dolly"></i> تقرير معاملات المخازن</button>
+                    <button onclick="app.navigate('settings')" id="nav-settings-btn"><i class="fa-solid fa-gears"></i> الإعدادات والنظام</button>
+                </nav>
+            </aside>
+
+            <main class="content no-print" onclick="app.closeSidebarMobile()">
+                <datalist id="items-datalist"></datalist>
+
+                <section id="dashboard" class="tab-content active">
+                    <h2>لوحة التحكم (<span class="current-wh-name-display"></span>)</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card c-blue"><h3>إضافة</h3><span id="count-add">0</span></div>
+                        <div class="stat-card c-green"><h3>صرف موقع</h3><span id="count-out">0</span></div>
+                        <div class="stat-card c-orange"><h3>تحويل صادر</h3><span id="count-trans">0</span></div>
+                        <div class="stat-card c-red"><h3>خصم معدة</h3><span id="count-deduct">0</span></div>
+                        <div class="stat-card c-purple"><h3>مرتجع مورد</h3><span id="count-return">0</span></div>
+                    </div>
+                    <div class="chart-container"><canvas id="dashboardChart"></canvas></div>
+                </section>
+
+                <section id="items" class="tab-content">
+                    <h2>إدارة الأصناف (عامة لكل المنظومة)</h2>
+                    <div class="form-group-row">
+                        <input type="hidden" id="item-edit-id">
+                        <input type="text" id="item-name" placeholder="اسم الصنف">
+                        <input type="text" id="item-unit" placeholder="الوحدة">
+                        <select id="item-type"></select>
+                        <select id="item-group"></select>
+                        <input type="number" id="item-reorder-point" placeholder="حد الطلب" value="0" title="أقل كمية للرصيد للبدء في طلبية جديدة">
+                        <input type="number" id="item-opening" placeholder="الافتتاحي للمخزن الحالي" value="0">
+                        <button onclick="itemsManager.add()" id="btn-save-item" class="btn-primary">حفظ الصنف</button>
+                        <button onclick="itemsManager.cancelEdit()" id="btn-cancel-item" class="btn-secondary" style="display:none;">إلغاء</button>
+                    </div>
+                    
+                    <div class="advanced-filter-box">
+                        <div class="row">
+                            <input type="text" id="search-item-filter" placeholder="ابحث باسم الصنف لفلترة الجدول..." onkeyup="itemsManager.render()" style="flex:2;">
+                            <div class="actions-bar perm-admin" style="flex:1;">
+                                 <input type="file" id="import-excel" accept=".xlsx, .xls" onchange="itemsManager.importExcel(this)" style="display:none;">
+                                 <button onclick="document.getElementById('import-excel').click()" class="btn-secondary w-100"><i class="fa-solid fa-file-excel"></i> استيراد من Excel</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table id="items-table">
+                            <thead><tr><th>الاسم</th><th>الوحدة</th><th>النوع</th><th>المجموعة</th><th>الافتتاحي (للمخزن)</th><th>حد الطلب</th><th class="perm-edit">إجراءات</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="warehouses" class="tab-content">
+                    <h2>إدارة المخازن والموردين والمواقع</h2>
+                    <p style="color:#7f8c8d; font-size:0.9em;">أضف كل الجهات التي تتعامل معها هنا لتظهر في القوائم المنسدلة الإجبارية للأذون.</p>
+                    <div class="form-group-row perm-admin">
+                        <input type="text" id="wh-name" placeholder="اسم المخزن/المورد/الموقع الجديد">
+                        <button onclick="warehouseManager.add()" class="btn-primary">إضافة للمنظومة</button>
+                    </div>
+                    <ul id="wh-list" style="list-style:none; padding:0; display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px;"></ul>
+                </section>
+
+                <section id="purchase_orders" class="tab-content">
+                    <h2>إدارة طلبيات الشراء</h2>
+                    <div class="advanced-filter-box">
+                        <h3 style="color:var(--danger); margin-top:0;">الأصناف التي وصلت لحد الطلب</h3>
+                        <p style="font-size:0.9em; color:#555;">حدد الأصناف وأدخل الكمية المطلوبة لتكوين طلبية شراء للمخزن.</p>
+                        <div class="table-responsive" style="max-height:300px;">
+                            <table id="reorder-items-table">
+                                <thead><tr><th>تحديد</th><th>الصنف</th><th>الرصيد الصالح المتاح</th><th>حد الطلب</th><th>الكمية المطلوبة للطلبية</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="row mt-20">
+                            <input type="text" id="po-serial-input" placeholder="رقم مسلسل الطلبية (اختياري)">
+                            <button onclick="poManager.createPO()" class="btn-success"><i class="fa-solid fa-cart-plus"></i> إنشاء وتصدير طلبية شراء بالمحدد</button>
+                        </div>
+                    </div>
+
+                    <h3>سجل الطلبيات الصادرة (المخزن الحالي)</h3>
+                    <div id="po-archive-container"></div>
+                </section>
+
+                <section id="permits_entry" class="tab-content">
+                    <h2>إدخال أو تعديل إذن في (<span class="current-wh-name-display" style="color:var(--accent);"></span>)</h2>
+                    
+                    <div class="import-area perm-admin" style="background:#e8f6f3; padding:10px; border:1px dashed #1abc9c; margin-bottom:15px; border-radius:5px;">
+                        <label style="cursor:pointer; font-weight:bold; color:var(--primary);">
+                            <i class="fa-solid fa-file-excel"></i> استيراد أذون من Excel (دفعة واحدة)
+                            <input type="file" id="import-permits-excel" accept=".xlsx, .xls" onchange="permitsManager.importPermitsExcel(this)" style="display:none;">
+                        </label>
+                        <small style="display:block; color:#7f8c8d;">يجب أن يحتوي الملف على: نوع الاذن، رقم الاذن الاساسي، الصنف، الوحدة، الكمية، التاريخ، الجهة الاخرى</small>
+                    </div>
+
+                    <div class="permit-form">
+                        <input type="hidden" id="p-edit-id"> 
+                        <input type="hidden" id="p-transfer-source-id"> 
+                        
+                        <div class="row">
+                            <select id="p-type" onchange="permitsManager.onTypeChange()" style="flex:1;">
+                                <option value="add">إذن إضافة</option>
+                                <option value="site_issue">إذن صرف موقع</option>
+                                <option value="machine_deduct">إذن خصم معدة</option>
+                                <option value="transfer">إذن تحويل صادر</option>
+                                <option value="supplier_return">إذن ارتجاع مورد</option>
+                                <option value="damage" style="color:red; font-weight:bold;">إذن تسجيل تلف (تكهين)</option>
+                                <option value="repair" style="color:green; font-weight:bold;">إذن صيانة وإصلاح</option>
+                            </select>
+                            <div style="flex:1; display:flex; gap:5px;">
+                                <input type="number" id="p-serial" placeholder="رقم الإذن الأساسي" style="flex:1;">
+                                <label style="background:#fef9e7; padding:10px; border-radius:5px; cursor:pointer; border:1px solid #f1c40f; display:flex; align-items:center; gap:5px; white-space:nowrap;" title="في حالة بدء دفتر جديد يبدأ برقم تسلسلي مختلف">
+                                    <input type="checkbox" id="p-is-new-book" onchange="permitsManager.toggleNewBook()"> دفتر جديد
+                                </label>
+                            </div>
+                            <input type="date" id="p-date" style="flex:1;">
+                        </div>
+                        <div class="row" id="po-link-row" style="display:none;">
+                            <select id="p-linked-po" style="flex:1; background:#f0fdfa; border:1px solid var(--accent); font-weight:bold;">
+                                <option value="">بدون ربط بطلبية شراء</option>
+                            </select>
+                            <small style="flex:1; color:#777; align-self:center;">اربط هذا الإذن بطلبية سابقة لحساب الكمية المنفذة منها والمتبقية.</small>
+                        </div>
+                        <div class="row">
+                            <select id="p-main-loc" style="flex:2;"></select>
+                            <input type="text" id="p-sub-serial" placeholder="رقم الإذن الفرعي (اختياري)">
+                        </div>
+                        <div class="row images-area" style="background:#f9f9f9; padding:10px; border-radius:5px; border:1px solid #eee;">
+                            <label style="flex:1;">صورة الإذن الأساسي: <input type="file" id="p-img-main" accept="image/*" style="width:100%; margin-top:5px;"></label>
+                            <label style="flex:1;">صورة الإذن الفرعي: <input type="file" id="p-img-sub" accept="image/*" style="width:100%; margin-top:5px;"></label>
+                        </div>
+                        <hr>
+                        <h4 style="color:var(--accent);">بنود الإذن (عدّل الكميات بالجدول مباشرة)</h4>
+                        <div class="row item-entry-line">
+                            <input list="items-datalist" id="p-item-input" placeholder="اسم الصنف..." onchange="permitsManager.onItemSelect()">
+                            <input type="text" id="p-item-unit" placeholder="الوحدة" disabled>
+                            <input type="number" id="p-item-qty" placeholder="الكمية" min="0.01" step="0.01">
+                            <button onclick="permitsManager.addItemToPermit()" class="btn-primary">إدراج للجدول</button>
+                        </div>
+                        <div class="table-responsive" style="max-height: 400px;">
+                            <table id="current-permit-items">
+                                <thead><tr><th>الصنف</th><th>الكمية</th><th>حذف</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="row mt-20">
+                            <button onclick="permitsManager.savePermit()" id="btn-save-permit" class="btn-success w-100" style="padding:15px; font-size:16px;"><i class="fa-solid fa-floppy-disk"></i> حفظ الإذن بالكامل</button>
+                            <button onclick="permitsManager.cancelEdit()" id="btn-cancel-permit" class="btn-danger w-100" style="display:none; margin-top:5px;">إلغاء التعديل</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="pending_transfers" class="tab-content">
+                    <h2>التحويلات الواردة قيد الانتظار</h2>
+                    <p style="color:#7f8c8d;">الأذون المحولة لمخزن <strong><span class="current-wh-name-display"></span></strong> ولم يتم استلامها بعد.</p>
+                    <div id="pending-transfers-container"></div>
+                </section>
+
+                <section id="permits_manage" class="tab-content">
+                    <h2>أرشيف الأذون للمخزن الحالي</h2>
+                    <div class="row no-print" style="margin-bottom:15px; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <button onclick="permitsManager.showLastSerials()" class="btn-primary" style="flex: 1;"><i class="fa-solid fa-list-ol"></i> تقرير تسلسل الأذون</button>
+                        <button onclick="permitsManager.exportArchiveExcel()" class="btn-excel" style="flex: 1;"><i class="fa-solid fa-file-excel"></i> تصدير الأرشيف لـ Excel</button>
+                    </div>
+                    <div class="advanced-filter-box">
+                        <div class="row">
+                            <input type="date" id="filter-date-from">
+                            <input type="date" id="filter-date-to">
+                            <select id="filter-p-type" onchange="permitsManager.renderArchive()">
+                                <option value="all">كل الأنواع</option>
+                                <option value="add">إضافة</option><option value="site_issue">صرف</option>
+                                <option value="machine_deduct">خصم</option><option value="transfer">تحويل</option>
+                                <option value="supplier_return">مرتجع</option>
+                                <option value="damage">تسجيل تلف</option>
+                                <option value="repair">تسجيل صيانة</option>
+                            </select>
+                            <select id="filter-p-loc" onchange="permitsManager.renderArchive()">
+                                <option value="all">تصفية بكل الجهات (الموردين/المخازن)</option>
+                            </select>
+                            <select id="filter-p-sort" onchange="permitsManager.renderArchive()" style="border:1px solid var(--accent); background:#f0fdfa;">
+                                <option value="date_desc">الترتيب: التاريخ (الأحدث أولاً)</option>
+                                <option value="date_asc">الترتيب: التاريخ (الأقدم أولاً)</option>
+                                <option value="serial_asc">الترتيب: رقم الإذن (تصاعدي)</option>
+                                <option value="serial_desc">الترتيب: رقم الإذن (تنازلي)</option>
+                            </select>
+                            <input type="text" id="search-p-serial" placeholder="بحث برقم الإذن" onkeyup="permitsManager.renderArchive()">
+                        </div>
+                    </div>
+                    <div id="permits-archive-container"></div>
+                </section>
+
+                <section id="stock_balance" class="tab-content">
+                    <h2>كشف رصيد الأصناف</h2>
+                    <div class="advanced-filter-box">
+                        <div class="row">
+                            <input list="items-datalist" id="stock-filter-name" placeholder="الصنف..." onchange="reports.renderStock()">
+                            <select id="stock-filter-type" onchange="reports.renderStock()"><option value="all">كل الأنواع</option></select>
+                            <select id="stock-filter-group" onchange="reports.renderStock()"><option value="">كل المجموعات</option></select>
+                            <label style="background:#fee; padding:10px; border-radius:5px; color:red;"><input type="checkbox" id="stock-filter-negative" onchange="reports.renderStock()"> أرصدة سالبة</label>
+                        </div>
+                    </div>
+                    <div class="actions-bar">
+                        <button onclick="reports.exportStock('excel')" class="btn-excel"><i class="fa-solid fa-file-excel"></i> Excel</button>
+                        <button onclick="reports.exportStock('pdf')" class="btn-pdf"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                    </div>
+                    <div id="stock-print-area">
+                        <div id="print-header-stock" style="display:none; text-align:center; margin-bottom:20px;"></div>
+                        <div class="table-responsive">
+                            <table id="stock-table">
+                                <thead><tr><th>الصنف</th><th>المجموعة</th><th>النوع</th><th>رصيد افتتاحي</th><th>الرصيد الكلي (الأساسي)</th><th style="color:var(--danger);">العدة التالفة</th><th style="color:var(--success);">الرصيد الصالح للعمل</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="damage_report" class="tab-content">
+                    <h2>سجل التوالف والصيانة</h2>
+                    <p style="color:#7f8c8d;">تقرير يوضح إجمالي العدة التالفة المتبقية في المخزن والتي تحتاج لصيانة أو تكهين نهائي.</p>
+                    <div class="actions-bar">
+                        <button onclick="reports.exportDamage('excel')" class="btn-excel"><i class="fa-solid fa-file-excel"></i> Excel</button>
+                        <button onclick="reports.exportDamage('pdf')" class="btn-pdf"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                    </div>
+                    <div id="damage-print-area">
+                        <div id="print-header-damage" style="display:none; text-align:center; margin-bottom:20px;"></div>
+                        <div class="table-responsive">
+                            <table id="damage-table">
+                                <thead><tr><th>الصنف</th><th>إجمالي المسجل كتالف</th><th>إجمالي ما تم صيانته</th><th>باقي التالف حالياً بالمخزن</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="item_card" class="tab-content">
+                    <h2>كارتة الصنف التفصيلية</h2>
+                    <div class="row no-print">
+                        <input list="items-datalist" id="card-item-input" placeholder="ابحث عن الصنف..." style="flex: 2;">
+                        <button onclick="reports.generateItemCard()" class="btn-primary" style="flex: 1;"><i class="fa-solid fa-magnifying-glass"></i> عرض الكارتة</button>
+                        <button onclick="reports.exportCard('excel')" class="btn-excel">Excel</button>
+                        <button onclick="reports.exportCard('pdf')" class="btn-pdf">PDF</button>
+                    </div>
+                    <div id="card-print-area" style="background:#fff; padding:15px; border-radius:8px;">
+                        <div id="print-header-card" style="display:none; text-align:center; margin-bottom:20px; border-bottom:2px solid #333; padding-bottom:10px;"></div>
+                        <h3 id="card-title"></h3><p id="card-wh-subtitle"></p>
+                        <div class="table-responsive" style="max-height:none; overflow:visible;">
+                            <table id="card-table">
+                                <thead><tr><th>التاريخ</th><th>الإذن</th><th>فرعي</th><th>النوع</th><th>الجهة الأخرى</th><th>تأثير السليم</th><th>تأثير التالف</th><th>الرصيد الصالح للعمل</th><th class="no-print">الإذن</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="consumption" class="tab-content">
+                    <h2>نسب استهلاك المستهلكات</h2>
+                    <div class="advanced-filter-box">
+                        <div class="row">
+                            <input type="date" id="cons-date-from" title="من تاريخ">
+                            <input type="date" id="cons-date-to" title="إلى تاريخ">
+                            <input list="items-datalist" id="cons-filter-name" placeholder="بحث باسم الصنف...">
+                            <button onclick="reports.renderConsumption()" class="btn-primary"><i class="fa-solid fa-filter"></i> فلترة التقرير</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="consumption-table">
+                            <thead><tr><th>الصنف</th><th>الرصيد الحالي</th><th>المنصرف (خلال الفترة)</th><th>النسبة من الوارد الكلي</th><th>حالة السحب</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+             
+                <section id="total_movement" class="tab-content">
+                    <h2>إجمالي حركة الأصناف</h2>
+                    <div class="table-responsive">
+                        <table id="movement-table">
+                            <thead><tr><th>الصنف</th><th>الوحدة</th><th>المضاف</th><th>المنصرف</th><th>تحويل صادر</th><th>خصم معدة</th><th>ارتجاع مورد</th><th>تالف</th><th>صيانة</th><th>الرصيد الكلي</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="transfers_check" class="tab-content">
+                    <h2>تقرير المعاملات بين مخزنين بالتواريخ</h2>
+                    <div class="row no-print">
+                        <select id="trans-loc1" class="loc-selector"></select>
+                        <select id="trans-loc2" class="loc-selector"></select>
+                        <input type="date" id="trans-date-from" title="من تاريخ">
+                        <input type="date" id="trans-date-to" title="إلى تاريخ">
+                        <button onclick="reports.checkTransfers()" class="btn-primary">بحث بالتواريخ</button>
+                        <button onclick="reports.exportTransfersPDF()" class="btn-pdf"><i class="fa-solid fa-file-pdf"></i> تصدير PDF</button>
+                    </div>
+                    <div id="trans-print-area" style="background:#fff; padding:15px; border-radius:5px;">
+                        <div id="print-header-trans" style="display:none; text-align:center; margin-bottom:20px; border-bottom:2px solid #333; padding-bottom:10px;"></div>
+                        <div id="trans-results"></div>
+                    </div>
+                </section>
+
+                <section id="settings" class="tab-content">
+                    <h2>الإعدادات والنظام (النسخة السحابية)</h2>
+                    
+                    <div class="settings-box perm-admin">
+                        <h3 style="color:var(--primary);"><i class="fa-solid fa-users"></i> إدارة المستخدمين وصلاحيات المخازن</h3>
+                        <p style="font-size:0.9em; color:#7f8c8d;">أضف المستخدمين وحدد المخازن المسموح لهم بالدخول إليها لتسجيل الحركات.</p>
+                        
+                        <div class="row">
+                            <input type="hidden" id="edit-user-idx" value="">
+                            <input type="text" id="new-user-name" placeholder="اسم المستخدم">
+                            <input type="text" id="new-user-pass" placeholder="كلمة المرور">
+                            <select id="new-user-role" onchange="usersManager.toggleWhSelection()">
+                                <option value="entry">إدخال فقط (بدون تعديل/حذف)</option>
+                                <option value="editor">محرر (إدخال وتعديل وحذف)</option>
+                                <option value="admin">مدير (كافة الصلاحيات والمخازن)</option>
+                            </select>
+                        </div>
+                        
+                        <div id="user-wh-selection" style="margin-bottom: 15px; background: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee;">
+                            <label style="font-weight:bold; display:block; margin-bottom:10px; color:var(--secondary);">المخازن المسموح للمستخدم بالدخول إليها وتعديلها:</label>
+                            <div id="user-wh-checkboxes" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
+                        </div>
+
+                        <div class="row">
+                            <button onclick="usersManager.saveUser()" id="btn-save-user" class="btn-primary">إضافة مستخدم</button>
+                            <button onclick="usersManager.cancelEdit()" id="btn-cancel-user" class="btn-secondary" style="display:none;">إلغاء التعديل</button>
+                        </div>
+                        
+                        <table id="users-table" style="width:100%; margin-top:20px;" border="1">
+                            <thead style="background:#eee;"><tr><th>المستخدم</th><th>الصلاحية</th><th>المخازن المسموحة</th><th>إجراءات</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div class="settings-box perm-admin">
+                        <h3 style="color:var(--accent);"><i class="fa-solid fa-tags"></i> إعدادات القوائم المنسدلة (الأنواع والمجموعات)</h3>
+                        <div class="row">
+                            <div style="flex:1;">
+                                <label>الأنواع (كل نوع في سطر):</label>
+                                <textarea id="set-types-list" rows="4" style="width:100%;"></textarea>
+                            </div>
+                            <div style="flex:1;">
+                                <label>المجموعات (كل مجموعة في سطر):</label>
+                                <textarea id="set-groups-list" rows="4" style="width:100%;"></textarea>
+                            </div>
+                        </div>
+                        <button onclick="app.saveListsSettings()" class="btn-success w-100 mt-20">حفظ القوائم وتحديث النظام</button>
+                    </div>
+
+                    <div class="settings-box">
+                        <h3><i class="fa-solid fa-print"></i> إعدادات الطباعة والشركة</h3>
+                        <div class="row">
+                            <input type="text" id="set-company-name" placeholder="اسم الشركة (يظهر كعنوان للتقارير)">
+                            <label style="flex:1; background:#f0fdfa; padding:10px; border-radius:5px; border:1px solid var(--accent); cursor:pointer; text-align:center;">
+                                <i class="fa-solid fa-image"></i> رفع اللوجو للطباعة
+                                <input type="file" id="set-company-logo" accept="image/*" style="display:none;" onchange="app.handleLogoUpload(this)">
+                            </label>
+                        </div>
+                        <img id="logo-preview" style="max-height:80px; display:none; margin-bottom:10px; border:1px solid #ddd; padding:5px; border-radius:5px;">
+                        <button onclick="app.saveCompanySettings()" class="btn-success">حفظ إعدادات الطباعة</button>
+                    </div>
+
+                    <div class="settings-box">
+                        <h3 style="color:var(--secondary);"><i class="fa-solid fa-shield-halved"></i> الأمان والنسخ الاحتياطي (Backup & Restore)</h3>
+                        <div class="row">
+                            <button onclick="app.changePassword()" class="btn-secondary"><i class="fa-solid fa-key"></i> تغيير كلمة المرور الشخصية</button>
+                            <button onclick="app.backupData()" class="btn-primary"><i class="fa-solid fa-download"></i> إنشاء نسخة محلية</button>
+                            <label class="btn-warning" style="cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:10px; border-radius:5px; color:white;">
+                                <i class="fa-solid fa-upload" style="margin-left:5px;"></i> استعادة ورفع للسحابة (Restore)
+                                <input type="file" accept=".json" onchange="app.restoreData(this)" style="display:none;">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="settings-box perm-admin" style="border: 2px solid var(--danger); background:#fdf2f2;">
+                        <h3 style="color:#c0392b;"><i class="fa-solid fa-triangle-exclamation"></i> منطقة الخطر (حذف البيانات)</h3>
+                        <div class="row">
+                            <button onclick="app.clearData('items')" class="btn-danger"><i class="fa-solid fa-trash"></i> حذف جميع الأصناف</button>
+                            <button onclick="app.clearData('permits')" class="btn-danger"><i class="fa-solid fa-trash"></i> حذف جميع الأذون</button>
+                            <button onclick="app.clearData('all')" class="btn-danger" style="background:#8b0000; font-weight:bold;"><i class="fa-solid fa-bomb"></i> تهيئة النظام (مسح السحابة بالكامل)</button>
+                        </div>
+                    </div>
+                </section>
+                <div class="row no-print" style="justify-content:center; margin-top:20px;">
+                    <button onclick="app.logout()" class="btn-secondary" style="padding:15px 40px; background:#7f8c8d;"><i class="fa-solid fa-lock"></i> تسجيل خروج</button>
+                </div>
+            </main>
+        </div>
+
+        <nav class="bottom-nav no-print">
+            <button onclick="app.navigate('dashboard')" id="nav-dash"><i class="fa-solid fa-chart-pie"></i>اللوحة</button>
+            <button onclick="app.navigate('permits_entry')" id="nav-add"><i class="fa-solid fa-plus-circle"></i>إذن جديد</button>
+            <button onclick="app.navigate('purchase_orders')" id="nav-po"><i class="fa-solid fa-cart-shopping"></i>طلبيات</button>
+            <button onclick="app.navigate('pending_transfers')" id="nav-pend" style="position:relative;"><i class="fa-solid fa-bell"></i>وارد<span id="nav-badge" style="position:absolute;top:2px;right:10px;background:red;color:white;border-radius:50%;width:15px;height:15px;font-size:10px;display:none;">!</span></button>
+            <button onclick="app.navigate('permits_manage')" id="nav-list"><i class="fa-solid fa-list-check"></i>الأرشيف</button>
+            <button onclick="app.navigate('items')" id="nav-items"><i class="fa-solid fa-box-open"></i>الأصناف</button>
+            <button onclick="app.navigate('stock_balance')" id="nav-stock"><i class="fa-solid fa-scale-balanced"></i>الرصيد</button>
+            <button onclick="app.navigate('damage_report')" id="nav-dam"><i class="fa-solid fa-triangle-exclamation"></i>توالف</button>
+            <button onclick="app.navigate('warehouses')" id="nav-wh"><i class="fa-solid fa-building"></i>مخازن</button>
+            <button onclick="app.navigate('settings')" id="nav-set" class="perm-admin-btn"><i class="fa-solid fa-gears"></i>إعدادات</button>
+        </nav>
+    </div>
+    
+    <div id="modal-overlay" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+        <div class="modal-content" id="print-modal-content">
+            <span class="close-modal no-print" onclick="document.getElementById('modal-overlay').style.display='none'">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+    /* =========================================
+       Smart Warehouse System - Ultimate Cloud V8 (Modified by Elboshy Specs)
+       (Google Sheets Integration, Real-Time Sync, Reorder Limits, POs, Damages)
+    ========================================= */
+
+    const db = {
+        items: [], warehouses: [], permits: [], users: [], notifications: [], purchaseOrders: [],
+        settings: { activeWarehouse: null, companyName: 'Intersment', logoBase64: '', types: [], groups: [] },
+        currentUser: null,
+        scriptUrl: "https://script.google.com/macros/s/AKfycbyksSyY4IEcl-mfaIrdj6JJn89noqZ29XfRflRG9LkzsXPBjnyWIY47SDrbN4F4zHkM/exec",
+        
+        showLoader(msg) {
+            const loader = document.getElementById('cloud-loader');
+            document.getElementById('cloud-loader-msg').innerText = msg;
+            loader.style.display = 'flex';
+        },
+        hideLoader() {
+            document.getElementById('cloud-loader').style.display = 'none';
+        },
+
+        loadCloud(isInitial = false) {
+            this.showLoader(isInitial ? "جاري الاتصال بقاعدة البيانات السحابية..." : "جاري التحديث من السحابة...");
+            return fetch(this.scriptUrl)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.inv_items) this.items = JSON.parse(data.inv_items);
+                    if(data.inv_warehouses) this.warehouses = JSON.parse(data.inv_warehouses);
+                    if(data.inv_permits) this.permits = JSON.parse(data.inv_permits);
+                    if(data.inv_users) this.users = JSON.parse(data.inv_users);
+                    if(data.inv_notifications) this.notifications = JSON.parse(data.inv_notifications);
+                    if(data.inv_purchase_orders) this.purchaseOrders = JSON.parse(data.inv_purchase_orders);
+                    if(data.inv_settings) {
+                        let savedSettings = JSON.parse(data.inv_settings);
+                        this.settings = { ...this.settings, ...savedSettings };
+                    }
+                    this.normalizeData();
+                    this.saveLocalBackup();
+                    this.hideLoader();
+                })
+                .catch(e => {
+                    console.error("Cloud Error:", e);
+                    if(isInitial) {
+                        this.loadLocalBackup();
+                        this.normalizeData();
+                    } else {
+                        alert("تعذر التحديث بسبب ضعف الاتصال بالإنترنت.");
+                    }
+                    this.hideLoader();
+                });
+        },
+
+        save() {
+            this.showLoader("جاري حفظ التعديلات في السحابة...");
+            this.saveLocalBackup();
+            
+            const payload = {
+                inv_items: JSON.stringify(this.items),
+                inv_warehouses: JSON.stringify(this.warehouses),
+                inv_permits: JSON.stringify(this.permits),
+                inv_users: JSON.stringify(this.users),
+                inv_notifications: JSON.stringify(this.notifications),
+                inv_purchase_orders: JSON.stringify(this.purchaseOrders),
+                inv_settings: JSON.stringify(this.settings)
+            };
+            
+            return fetch(this.scriptUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                this.hideLoader();
+            }).catch(e => {
+                console.error(e);
+                alert("خطأ في الاتصال! تم حفظ البيانات محلياً على جهازك. يرجى الضغط على زر (تحديث) عند استقرار الإنترنت.");
+                this.hideLoader();
+            });
+        },
+
+        normalizeData() {
+            if(!this.settings.companyName) this.settings.companyName = 'Intersment';
+            if(!this.settings.types || this.settings.types.length === 0) this.settings.types = ['عدة', 'مستهلكات'];
+            if(!this.settings.groups || this.settings.groups.length === 0) this.settings.groups = ['عدد وأدوات', 'بحرية', 'أمن صناعي', 'مكتبي', 'سقالات', 'خامات', 'أخرى'];
+            
+            // Fix 10: Auto-create admin only if really empty (not explicitly cleared)
+            if(this.users.length === 0 && !localStorage.getItem('inv_users_cleared')) {
+                this.users.push({ username: 'admin', password: '123', role: 'admin', allowedWarehouses: [] });
+            }
+
+            this.items.forEach(item => {
+                if (!item.openingBalances) {
+                    item.openingBalances = {};
+                    if(item.openingBalance !== undefined) {
+                        if(this.warehouses.length > 0) item.openingBalances[this.warehouses[0]] = item.openingBalance;
+                        delete item.openingBalance;
+                    }
+                }
+                if (item.reorderPoint === undefined) item.reorderPoint = 0;
+            });
+            if(!this.purchaseOrders) this.purchaseOrders = [];
+        },
+
+        saveLocalBackup() {
+            localStorage.setItem('inv_items', JSON.stringify(this.items));
+            localStorage.setItem('inv_warehouses', JSON.stringify(this.warehouses));
+            localStorage.setItem('inv_permits', JSON.stringify(this.permits));
+            localStorage.setItem('inv_users', JSON.stringify(this.users));
+            localStorage.setItem('inv_notifications', JSON.stringify(this.notifications));
+            localStorage.setItem('inv_purchase_orders', JSON.stringify(this.purchaseOrders));
+            localStorage.setItem('inv_settings', JSON.stringify(this.settings));
+        },
+        
+        loadLocalBackup() {
+            try {
+                this.items = JSON.parse(localStorage.getItem('inv_items')) || [];
+                this.warehouses = JSON.parse(localStorage.getItem('inv_warehouses')) || [];
+                this.permits = JSON.parse(localStorage.getItem('inv_permits')) || [];
+                this.users = JSON.parse(localStorage.getItem('inv_users')) || [];
+                this.notifications = JSON.parse(localStorage.getItem('inv_notifications')) || [];
+                this.purchaseOrders = JSON.parse(localStorage.getItem('inv_purchase_orders')) || [];
+                let savedSettings = JSON.parse(localStorage.getItem('inv_settings'));
+                if(savedSettings) this.settings = { ...this.settings, ...savedSettings };
+            } catch(e) { console.error("Local DB error:", e); }
+        }
+    };
+
+    const app = {
+        init() {
+            if (db.users.length === 0) { document.getElementById('setup-hint').style.display = 'block'; }
+            if(db.settings.companyName) document.getElementById('set-company-name').value = db.settings.companyName;
+            if(db.settings.logoBase64) { const img = document.getElementById('logo-preview'); img.src = db.settings.logoBase64; img.style.display = 'block'; }
+            document.getElementById('set-types-list').value = db.settings.types.join('\n'); document.getElementById('set-groups-list').value = db.settings.groups.join('\n');
+            this.populateDynamicLists();
+            
+            document.getElementById('login-screen').style.display = 'flex';
+        },
+        login() {
+            const user = document.getElementById('username-input').value.trim(); const pass = document.getElementById('password-input').value.trim();
+            if (db.users.length === 0) {
+                if(user.length < 3 || pass.length < 3) return alert("الاسم وكلمة المرور يجب أن يكونا 3 أحرف على الأقل.");
+                db.users.push({ username: user, password: pass, role: 'admin', allowedWarehouses: [] }); 
+                db.save().then(() => {
+                    alert("تم إنشاء حساب المدير ورفعه للسحابة بنجاح."); 
+                    db.currentUser = db.users[0]; 
+                    this.showApp();
+                });
+            } else {
+                const found = db.users.find(u => u.username === user && u.password === pass);
+                if (found) { db.currentUser = found; this.showApp(); } else alert("اسم المستخدم أو كلمة المرور غير صحيحة!");
+            }
+        },
+        showApp() {
+            document.getElementById('login-screen').style.display = 'none'; document.getElementById('main-app').style.display = 'flex';
+            document.getElementById('current-user-display').innerHTML = `<i class="fa-solid fa-user-circle"></i> ${db.currentUser.username} (${db.currentUser.role === 'admin' ? 'مدير' : 'مستخدم'})`;
+            
+            if(db.warehouses.length === 0) { db.warehouses.push("المخزن الرئيسي"); db.save(); }
+            
+            db.currentUser = db.users.find(u => u.username === db.currentUser.username) || db.currentUser;
+
+            let allowed = db.currentUser.role === 'admin' ? db.warehouses : (db.currentUser.allowedWarehouses || []);
+            if(allowed.length === 0) {
+                alert("عفواً، ليس لديك صلاحية الدخول لأي مخزن. يرجى مراجعة مدير النظام.");
+                this.logout();
+                return;
+            }
+
+            if(!db.settings.activeWarehouse || !allowed.includes(db.settings.activeWarehouse)) { 
+                db.settings.activeWarehouse = allowed[0]; db.save(); 
+            }
+            
+            this.applyPermissions(); this.updateWarehouseSelector(); this.updateActiveWarehouseUI();
+            this.navigate('dashboard'); itemsManager.populateDatalist(); warehouseManager.renderList(); usersManager.render();
+        },
+        refreshData() {
+            db.loadCloud(false).then(() => {
+                this.showApp();
+                const activeTab = document.querySelector('.tab-content.active');
+                if(activeTab) this.navigate(activeTab.id);
+                alert("تم تحديث البيانات من السحابة بنجاح!");
+            });
+        },
+        applyPermissions() {
+            const role = db.currentUser.role;
+            document.querySelectorAll('.perm-admin').forEach(el => el.style.display = (role === 'admin') ? '' : 'none');
+            document.querySelectorAll('.perm-edit').forEach(el => el.style.display = (role === 'entry') ? 'none' : '');
+            const setBtn = document.getElementById('nav-settings-btn');
+            if(setBtn) setBtn.style.display = (role === 'admin') ? 'flex' : 'none';
+        },
+        hasPerm(action) {
+            const role = db.currentUser.role;
+            if(role === 'admin') return true;
+            if(role === 'editor' && action === 'edit') return true;
+            return false;
+        },
+        updateWarehouseSelector() {
+            const sel = document.getElementById('global-wh-selector'); sel.innerHTML = '';
+            let allowed = db.currentUser.role === 'admin' ? db.warehouses : (db.currentUser.allowedWarehouses || []);
+            
+            db.warehouses.forEach(w => { 
+                if(allowed.includes(w)) {
+                    const opt = new Option(w, w); if(w === db.settings.activeWarehouse) opt.selected = true; sel.add(opt); 
+                }
+            });
+            permitsManager.populateSelects();
+        },
+        switchWarehouse(whName) {
+            db.settings.activeWarehouse = whName; db.save(); this.updateActiveWarehouseUI();
+            permitsManager.populateSelects();
+            const activeTab = document.querySelector('.tab-content.active').id; this.navigate(activeTab);
+        },
+        updateActiveWarehouseUI() {
+            document.querySelectorAll('.current-wh-name-display').forEach(el => el.innerText = db.settings.activeWarehouse);
+            this.checkPendingTransfersBadge();
+            this.checkNotifications();
+        },
+        navigate(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.sidebar nav button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
+
+            const activeTab = document.getElementById(tabId); if(activeTab) activeTab.classList.add('active');
+            const sideBtn = document.querySelector(`.sidebar nav button[onclick="app.navigate('${tabId}')"]`); if(sideBtn) sideBtn.classList.add('active');
+            
+            const bottomIdMap = { 'dashboard':'nav-dash', 'permits_entry':'nav-add', 'pending_transfers':'nav-pend', 'permits_manage':'nav-list', 'items':'nav-items', 'stock_balance':'nav-stock', 'item_card':'nav-card', 'consumption':'nav-cons', 'total_movement':'nav-move', 'transfers_check':'nav-trans', 'warehouses':'nav-wh', 'settings':'nav-set', 'purchase_orders':'nav-po', 'damage_report':'nav-dam' };
+            const bBtn = bottomIdMap[tabId] ? document.getElementById(bottomIdMap[tabId]) : null; if(bBtn) bBtn.classList.add('active');
+
+            this.checkPendingTransfersBadge();
+            if(tabId === 'dashboard') dashboard.render();
+            if(tabId === 'items') itemsManager.render();
+            if(tabId === 'permits_entry') permitsManager.onTypeChange();
+            if(tabId === 'permits_manage') permitsManager.renderArchive();
+            if(tabId === 'stock_balance') reports.renderStock();
+            if(tabId === 'damage_report') reports.renderDamage();
+            if(tabId === 'consumption') reports.renderConsumption();
+            if(tabId === 'total_movement') reports.renderMovement();
+            if(tabId === 'pending_transfers') transfersManager.renderPending();
+            if(tabId === 'warehouses') warehouseManager.renderList();
+            if(tabId === 'transfers_check') reports.populateTransfersLocSelects();
+            if(tabId === 'purchase_orders') poManager.render();
+        },
+        toggleSidebar() { const sb = document.getElementById('sidebar'); sb.style.display = (sb.style.display === 'none' || sb.style.display === '') ? 'flex' : 'none'; },
+        closeSidebarMobile() { if(window.innerWidth <= 768) document.getElementById('sidebar').style.display = 'none'; },
+        logout() { location.reload(); },
+        changePassword() {
+            const newPass = prompt("أدخل كلمة المرور الجديدة:");
+            if(newPass) { 
+                db.currentUser.password = newPass; 
+                const idx = db.users.findIndex(u => u.username === db.currentUser.username); 
+                if(idx!==-1) db.users[idx].password = newPass; 
+                db.save().then(() => alert("تم تغيير كلمة المرور بنجاح")); 
+            }
+        },
+        handleLogoUpload(input) {
+            const file = input.files[0]; if(!file) return; const reader = new FileReader();
+            reader.onload = (e) => { db.settings.logoBase64 = e.target.result; document.getElementById('logo-preview').src = e.target.result; document.getElementById('logo-preview').style.display = 'block'; }; reader.readAsDataURL(file);
+        },
+        saveCompanySettings() { db.settings.companyName = document.getElementById('set-company-name').value; db.save().then(() => alert("تم حفظ إعدادات الطباعة بنجاح")); },
+        saveListsSettings() {
+            const types = document.getElementById('set-types-list').value.split('\n').map(t=>t.trim()).filter(t=>t);
+            const groups = document.getElementById('set-groups-list').value.split('\n').map(g=>g.trim()).filter(g=>g);
+            if(types.length === 0 || groups.length === 0) return alert("القوائم لا يجب أن تكون فارغة.");
+            db.settings.types = types; db.settings.groups = groups; db.save().then(() => { this.populateDynamicLists(); alert("تم تحديث القوائم بنجاح"); });
+        },
+        populateDynamicLists() {
+            const selects = [ {id: 'item-type', data: db.settings.types}, {id: 'stock-filter-type', data: ['كل الأنواع', ...db.settings.types]}, {id: 'item-group', data: db.settings.groups}, {id: 'stock-filter-group', data: ['كل المجموعات', ...db.settings.groups]} ];
+            selects.forEach(s => { const el = document.getElementById(s.id); if(el) { el.innerHTML = ''; s.data.forEach(val => el.add(new Option(val, val==='كل الأنواع'||val==='كل المجموعات' ? (s.id.includes('type')?'all':'') : val))); } });
+        },
+        clearData(type) {
+            const pass = prompt("الرجاء إدخال كلمة المرور للتأكيد على عملية الحذف:");
+            if(pass === db.currentUser.password) {
+                if(!confirm("تحذير نهائي: الإجراء لا يمكن التراجع عنه. سيتم مسح البيانات من السحابة تماماً. هل أنت متأكد؟")) return;
+                
+                if(type === 'items') db.items = []; 
+                else if (type === 'permits') db.permits = []; 
+                else if (type === 'all') { 
+                    db.items=[]; db.warehouses=[]; db.permits=[]; db.users=[]; db.notifications=[]; db.purchaseOrders=[]; db.settings={};
+                    localStorage.setItem('inv_users_cleared', 'true');
+                    db.save().then(() => { localStorage.clear(); location.reload(); });
+                    return;
+                }
+                db.save().then(() => { alert("تم مسح البيانات بنجاح"); location.reload(); });
+            } else { alert("كلمة المرور خاطئة، تم إلغاء العملية."); }
+        },
+        backupData() {
+            const filename = "elboshy_backup_" + new Date().toISOString().slice(0,10) + ".json";
+            const data = JSON.stringify(localStorage); const blob = new Blob([data], {type: "application/json"});
+            const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        },
+        restoreData(input) {
+            const file = input.files[0]; if(!file) return; const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result); Object.keys(data).forEach(k => localStorage.setItem(k, data[k]));
+                    db.loadLocalBackup();
+                    db.normalizeData();
+                    db.save().then(() => {
+                        alert("تمت استعادة البيانات ورفعها للسحابة بنجاح! سيتم تحديث الصفحة."); 
+                        location.reload();
+                    });
+                } catch(err) { alert("ملف النسخة الاحتياطية غير صالح أو تالف."); }
+            }; reader.readAsText(file);
+        },
+        checkPendingTransfersBadge() {
+            const count = db.permits.filter(p => p.type === 'transfer' && p.status === 'pending' && p.locMain === db.settings.activeWarehouse).length; 
+            const badge = document.getElementById('pending-badge'); const navBadge = document.getElementById('nav-badge');
+            if(count > 0) { if(badge) { badge.innerText = count; badge.style.display = 'inline-block'; } if(navBadge) navBadge.style.display = 'inline-block'; } 
+            else { if(badge) badge.style.display = 'none'; if(navBadge) navBadge.style.display = 'none'; }
+        },
+        checkNotifications() {
+            const wh = db.settings.activeWarehouse;
+            const unread = (db.notifications || []).filter(n => n.warehouse === wh && !n.isRead).length;
+            const badge = document.getElementById('wh-notifications-badge');
+            if(badge) {
+                if(unread > 0) { badge.innerText = unread; badge.style.display = 'inline-block'; } 
+                else { badge.style.display = 'none'; }
+            }
+        },
+        showNotifications() {
+            const wh = db.settings.activeWarehouse;
+            const notifs = (db.notifications || []).filter(n => n.warehouse === wh).sort((a,b) => new Date(b.date) - new Date(a.date));
+            
+            let html = `<h3><i class="fa-solid fa-bell" style="color:var(--warning);"></i> إشعارات المخزن (${wh})</h3>`;
+            if(notifs.length === 0) {
+                html += `<p style="text-align:center; color:#7f8c8d; padding:20px;">لا توجد إشعارات حالياً.</p>`;
+            } else {
+                notifs.forEach(n => {
+                    let bg = n.isRead ? '#f9f9f9' : '#fff4f4';
+                    let border = n.isRead ? '#ddd' : 'var(--danger)';
+                    html += `<div style="background:${bg}; padding:15px; border:1px solid ${border}; margin-bottom:10px; border-radius:5px;">
+                        <div style="font-size:0.8em; color:#777; margin-bottom:5px;"><i class="fa-regular fa-clock"></i> ${n.date}</div>
+                        <div style="font-size:1.1em; line-height:1.5;">${n.message}</div>
+                        <div style="margin-top:10px; display:flex; gap:10px;">
+                            ${!n.isRead ? `<button class="btn-small btn-success" onclick="app.markNotifRead('${n.id}')"><i class="fa-solid fa-check"></i> تحديد كمقروء</button>` : ''}
+                            <button class="btn-small btn-danger" onclick="app.deleteNotif('${n.id}')"><i class="fa-solid fa-trash"></i> حذف الإشعار</button>
+                        </div>
+                    </div>`;
+                });
+            }
+            document.getElementById('modal-body').innerHTML = html;
+            document.getElementById('modal-overlay').style.display = 'flex';
+        },
+        markNotifRead(id) {
+            const n = db.notifications.find(x => x.id === id);
+            if(n) { n.isRead = true; db.save().then(() => { this.checkNotifications(); this.showNotifications(); }); }
+        },
+        deleteNotif(id) {
+            db.notifications = db.notifications.filter(x => x.id !== id);
+            db.save().then(() => { this.checkNotifications(); this.showNotifications(); });
+        }
+    };
+
+    // --- Users Manager ---
+    const usersManager = {
+        render() {
+            const tbody = document.querySelector('#users-table tbody'); tbody.innerHTML = '';
+            db.users.forEach((u, idx) => {
+                let roleName = u.role === 'admin' ? 'مدير' : (u.role === 'editor' ? 'محرر' : 'إدخال فقط');
+                let whList = u.role === 'admin' ? '<span style="color:green; font-weight:bold;">صلاحية لكل المخازن</span>' : (u.allowedWarehouses && u.allowedWarehouses.length > 0 ? u.allowedWarehouses.join('، ') : '<span style="color:red;">لا يوجد مخازن</span>');
+                let actionBtns = u.username !== 'admin' ? 
+                    `<button onclick="usersManager.edit(${idx})" class="btn-warning btn-small"><i class="fa-solid fa-pen"></i> تعديل</button>
+                     <button onclick="usersManager.del(${idx})" class="btn-danger btn-small"><i class="fa-solid fa-trash"></i></button>` : '-';
+                tbody.innerHTML += `<tr><td>${u.username}</td><td>${roleName}</td><td>${whList}</td><td>${actionBtns}</td></tr>`;
+            });
+            this.renderWhCheckboxes();
+        },
+        renderWhCheckboxes() {
+            const container = document.getElementById('user-wh-checkboxes'); container.innerHTML = '';
+            if(db.warehouses.length === 0) { container.innerHTML = '<span style="color:red;">لا توجد مخازن مضافة بعد. أضف مخازن أولاً.</span>'; return; }
+            db.warehouses.forEach(w => {
+                container.innerHTML += `<label style="background:#fff; padding:8px 12px; border:1px solid #ccc; border-radius:5px; cursor:pointer; font-weight:bold;">
+                    <input type="checkbox" class="user-wh-chk" value="${w}" style="margin:0 0 0 5px;"> ${w}</label>`;
+            });
+            this.toggleWhSelection();
+        },
+        toggleWhSelection() {
+            const role = document.getElementById('new-user-role').value;
+            document.getElementById('user-wh-selection').style.display = (role === 'admin') ? 'none' : 'block';
+        },
+        saveUser() {
+            const user = document.getElementById('new-user-name').value.trim();
+            const pass = document.getElementById('new-user-pass').value.trim();
+            const role = document.getElementById('new-user-role').value;
+            const editIdx = document.getElementById('edit-user-idx').value;
+            
+            if(!user || !pass) return alert("الرجاء إكمال بيانات المستخدم.");
+            
+            let allowedWarehouses = [];
+            if(role !== 'admin') {
+                document.querySelectorAll('.user-wh-chk:checked').forEach(chk => allowedWarehouses.push(chk.value));
+                if(allowedWarehouses.length === 0) return alert("يجب إعطاء المستخدم صلاحية الدخول لمخزن واحد على الأقل.");
+            }
+
+            if(editIdx !== "") {
+                const idx = parseInt(editIdx);
+                if(db.users[idx].username !== user && db.users.find(u => u.username === user)) return alert("الاسم مستخدم بالفعل لموظف آخر.");
+                db.users[idx].username = user; db.users[idx].password = pass; db.users[idx].role = role; db.users[idx].allowedWarehouses = allowedWarehouses;
+            } else {
+                if(db.users.find(u => u.username === user)) return alert("الاسم مستخدم بالفعل.");
+                db.users.push({ username: user, password: pass, role: role, allowedWarehouses: allowedWarehouses });
+            }
+            db.save().then(() => {
+                alert("تم حفظ بيانات المستخدم بنجاح.");
+                this.cancelEdit(); this.render();
+            });
+        },
+        edit(idx) {
+            const u = db.users[idx];
+            document.getElementById('edit-user-idx').value = idx;
+            document.getElementById('new-user-name').value = u.username;
+            document.getElementById('new-user-pass').value = u.password;
+            document.getElementById('new-user-role').value = u.role;
+            this.toggleWhSelection();
+            
+            document.querySelectorAll('.user-wh-chk').forEach(chk => {
+                chk.checked = u.allowedWarehouses && u.allowedWarehouses.includes(chk.value);
+            });
+
+            document.getElementById('btn-save-user').innerHTML = '<i class="fa-solid fa-check"></i> حفظ التعديل';
+            document.getElementById('btn-cancel-user').style.display = 'inline-block';
+        },
+        cancelEdit() {
+            document.getElementById('edit-user-idx').value = ""; document.getElementById('new-user-name').value = ""; document.getElementById('new-user-pass').value = "";
+            document.getElementById('new-user-role').value = "entry";
+            document.querySelectorAll('.user-wh-chk').forEach(chk => chk.checked = false);
+            document.getElementById('btn-save-user').innerHTML = 'إضافة مستخدم'; document.getElementById('btn-cancel-user').style.display = 'none';
+            this.toggleWhSelection();
+        },
+        del(idx) { if(db.users[idx].role === 'admin' && idx === 0) return alert("لا يمكن حذف المدير الأساسي للنظام"); if(confirm("هل أنت متأكد من حذف المستخدم؟")) { db.users.splice(idx, 1); db.save().then(()=>this.render()); } }
+    }
+
+    // --- Items Manager ---
+    const itemsManager = {
+        render() {
+            const tbody = document.querySelector('#items-table tbody'); tbody.innerHTML = ''; const wh = db.settings.activeWarehouse;
+            const filterName = document.getElementById('search-item-filter').value.toLowerCase();
+            
+            db.items.sort((a,b) => a.name.localeCompare(b.name)).forEach(item => {
+                if(filterName && !item.name.toLowerCase().includes(filterName)) return;
+                
+                const whOpening = item.openingBalances[wh] || 0; const tr = document.createElement('tr');
+                let actBtn = app.hasPerm('edit') ? `<button onclick="itemsManager.edit('${item.id}')" class="btn-primary btn-small">تعديل</button> <button onclick="itemsManager.delete('${item.id}')" class="btn-danger btn-small"><i class="fa-solid fa-trash"></i></button>` : '-';
+                
+                let stockCalc = reports.calcItemStock(item.id);
+                let reorderPointText = item.reorderPoint || 0;
+                if(stockCalc.good <= item.reorderPoint && item.reorderPoint > 0) reorderPointText += ` <span class="badge-danger"><i class="fa-solid fa-arrow-down"></i></span>`;
+
+                tr.innerHTML = `<td>${item.name}</td><td>${item.unit}</td><td>${item.type}</td><td>${item.group}</td><td>${whOpening}</td><td>${reorderPointText}</td><td class="perm-edit">${actBtn}</td>`;
+                tbody.appendChild(tr);
+            });
+            app.applyPermissions();
+        },
+        add() {
+            const name = document.getElementById('item-name').value.trim(), unit = document.getElementById('item-unit').value.trim();
+            const type = document.getElementById('item-type').value, group = document.getElementById('item-group').value;
+            const opening = parseFloat(document.getElementById('item-opening').value) || 0;
+            const reorderPoint = parseFloat(document.getElementById('item-reorder-point').value) || 0;
+            const editId = document.getElementById('item-edit-id').value, wh = db.settings.activeWarehouse;
+            
+            if(!name || !unit) return alert("يرجى إدخال اسم الصنف والوحدة");
+
+            if(editId) {
+                const idx = db.items.findIndex(i => i.id === editId);
+                if(idx !== -1) { 
+                    db.items[idx].name = name; db.items[idx].unit = unit; db.items[idx].type = type; 
+                    db.items[idx].group = group; db.items[idx].openingBalances[wh] = opening; 
+                    db.items[idx].reorderPoint = reorderPoint;
+                }
+                this.cancelEdit();
+            } else {
+                if(db.items.some(i => i.name === name)) return alert("هذا الصنف تم إضافته من قبل.");
+                const newItem = { id: Date.now().toString(), name, unit, type, group, reorderPoint, openingBalances: {} }; newItem.openingBalances[wh] = opening; db.items.push(newItem);
+            }
+            db.save().then(() => {
+                this.render(); this.populateDatalist();
+                if(!editId) { document.getElementById('item-name').value = ''; document.getElementById('item-opening').value = '0'; document.getElementById('item-reorder-point').value = '0'; }
+            });
+        },
+        edit(id) {
+            const item = db.items.find(i => i.id === id); if(!item) return; const wh = db.settings.activeWarehouse;
+            document.getElementById('item-name').value = item.name; document.getElementById('item-unit').value = item.unit; document.getElementById('item-type').value = item.type; document.getElementById('item-group').value = item.group;
+            document.getElementById('item-opening').value = item.openingBalances[wh] || 0; 
+            document.getElementById('item-reorder-point').value = item.reorderPoint || 0;
+            document.getElementById('item-edit-id').value = item.id;
+            document.getElementById('btn-save-item').innerHTML = `<i class="fa-solid fa-check"></i> حفظ التعديلات`; document.getElementById('btn-cancel-item').style.display = "inline-block";
+            window.scrollTo(0,0);
+        },
+        cancelEdit() {
+            document.getElementById('item-edit-id').value = ""; document.getElementById('item-name').value = ""; document.getElementById('item-opening').value = "0"; document.getElementById('item-reorder-point').value = "0";
+            document.getElementById('btn-save-item').innerHTML = `حفظ الصنف`; document.getElementById('btn-cancel-item').style.display = "none";
+        },
+        delete(id) { if(confirm("حذف الصنف سيخفيه من كل المخازن. هل أنت متأكد؟")) { db.items = db.items.filter(i => i.id !== id); db.save().then(() => { this.render(); this.populateDatalist(); }); } },
+        populateDatalist() { const dl = document.getElementById('items-datalist'); dl.innerHTML = ''; db.items.forEach(item => { dl.appendChild(new Option(item.name)); }); },
+        importExcel(input) {
+            const file = input.files[0]; const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, {type: 'array'});
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                rows.forEach(row => {
+                    const name = row['Name'] || row['اسم الصنف'];
+                    if(name && !db.items.some(i => i.name === name)) {
+                        const wh = db.settings.activeWarehouse; const newItem = { id: Date.now() + Math.random().toString(), name: name, unit: row['Unit'] || row['الوحدة'] || 'عدد', type: row['Type'] || row['النوع'] || db.settings.types[0], group: row['Group'] || row['المجموعة'] || db.settings.groups[0], reorderPoint: parseFloat(row['حد الطلب'])||0, openingBalances: {} };
+                        newItem.openingBalances[wh] = parseFloat(row['Opening'] || row['رصيد افتتاحي']) || 0; db.items.push(newItem);
+                    }
+                });
+                db.save().then(() => { this.render(); this.populateDatalist(); alert("تم استيراد الأصناف بنجاح."); input.value = ''; });
+            }; reader.readAsArrayBuffer(file);
+        }
+    };
+
+    // --- Purchase Orders Manager ---
+    const poManager = {
+        render() {
+            this.renderReorderTable();
+            this.renderPOArchive();
+        },
+        renderReorderTable() {
+            const tbody = document.querySelector('#reorder-items-table tbody'); tbody.innerHTML = '';
+            const wh = db.settings.activeWarehouse;
+            let count = 0;
+            db.items.forEach(item => {
+                if(item.reorderPoint > 0) {
+                    const stockCalc = reports.calcItemStock(item.id);
+                    if(stockCalc.good <= item.reorderPoint) {
+                        count++;
+                        tbody.innerHTML += `<tr>
+                            <td><input type="checkbox" class="po-chk" data-id="${item.id}" checked></td>
+                            <td>${item.name}</td>
+                            <td style="color:var(--danger); font-weight:bold;">${stockCalc.good}</td>
+                            <td>${item.reorderPoint}</td>
+                            <td><input type="number" class="qty-input-table po-qty-input" id="po-qty-${item.id}" value="${item.reorderPoint * 2}" min="1"></td>
+                        </tr>`;
+                    }
+                }
+            });
+            if(count === 0) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">لا توجد أصناف وصلت لحد الطلب في هذا المخزن حالياً.</td></tr>`;
+        },
+        createPO() {
+            const serial = document.getElementById('po-serial-input').value.trim() || `PO-${Date.now().toString().slice(-6)}`;
+            const wh = db.settings.activeWarehouse;
+            let poItems = [];
+            
+            document.querySelectorAll('.po-chk:checked').forEach(chk => {
+                const itemId = chk.getAttribute('data-id');
+                const item = db.items.find(i => i.id === itemId);
+                const qty = parseFloat(document.getElementById(`po-qty-${itemId}`).value) || 0;
+                if(item && qty > 0) {
+                    poItems.push({ itemId: item.id, itemName: item.name, reqQty: qty });
+                }
+            });
+
+            if(poItems.length === 0) return alert("الرجاء تحديد صنف واحد على الأقل وإدخال الكمية المطلوبة.");
+
+            const newPO = {
+                id: Date.now().toString(), warehouse: wh, serial: serial, date: new Date().toISOString().slice(0,10), items: poItems, createdBy: db.currentUser.username
+            };
+            
+            db.purchaseOrders.push(newPO);
+            db.save().then(() => {
+                alert("تم إنشاء طلبية الشراء بنجاح.");
+                document.getElementById('po-serial-input').value = '';
+                this.render();
+            });
+        },
+        getExecutedQty(poId, itemId) {
+            let executed = 0;
+            db.permits.filter(p => p.type === 'add' && p.linkedPO === poId).forEach(p => {
+                let pi = p.items.find(i => i.itemId === itemId);
+                if(pi) executed += pi.qty;
+            });
+            return executed;
+        },
+        renderPOArchive() {
+            const container = document.getElementById('po-archive-container'); container.innerHTML = '';
+            const wh = db.settings.activeWarehouse;
+            const myPOs = db.purchaseOrders.filter(po => po.warehouse === wh).sort((a,b) => new Date(b.date) - new Date(a.date));
+            
+            if(myPOs.length === 0) { container.innerHTML = '<p style="text-align:center; padding:20px;">لا توجد طلبيات سابقة.</p>'; return; }
+
+            myPOs.forEach(po => {
+                let isFullyExecuted = true;
+                let rowsHtml = '';
+                po.items.forEach(item => {
+                    let execQty = this.getExecutedQty(po.id, item.itemId);
+                    let remQty = item.reqQty - execQty;
+                    if(remQty > 0) isFullyExecuted = false;
+                    
+                    rowsHtml += `<tr>
+                        <td>${item.itemName}</td>
+                        <td style="font-weight:bold;">${item.reqQty}</td>
+                        <td style="color:green;">${execQty}</td>
+                        <td style="color:${remQty>0?'red':'green'};">${remQty}</td>
+                    </tr>`;
+                });
+
+                let statusBadge = isFullyExecuted ? `<span class="badge-pending" style="background:#e8f8f5; border-color:var(--success); color:var(--success);">مكتملة بالكامل</span>` : `<span class="badge-pending">بانتظار الاستلام</span>`;
+                let actBtn = app.hasPerm('edit') ? `<button onclick="poManager.deletePO('${po.id}')" class="btn-danger btn-small"><i class="fa-solid fa-trash"></i></button>` : '';
+
+                const div = document.createElement('div');
+                div.style = "border:1px solid #ddd; margin-bottom:15px; padding:15px; background:#fff; border-radius:5px;";
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <div><strong>طلبية شراء: ${po.serial}</strong> | التاريخ: ${po.date} ${statusBadge} <br><small>بواسطة: ${po.createdBy||''}</small></div>
+                        <div><button onclick="poManager.viewPO('${po.id}')" class="btn-primary btn-small"><i class="fa-solid fa-print"></i> عرض/تصدير</button> ${actBtn}</div>
+                    </div>
+                    <div class="table-responsive" style="max-height:none;">
+                        <table border="1" style="width:100%; border-collapse:collapse; text-align:center;">
+                            <thead style="background:#eee;"><tr><th>الصنف</th><th>الكمية المطلوبة</th><th>المنفذ المستلم</th><th>المتبقي</th></tr></thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    </div>`;
+                container.appendChild(div);
+            });
+        },
+        deletePO(id) { if(confirm("هل أنت متأكد من حذف هذه الطلبية؟")) { db.purchaseOrders = db.purchaseOrders.filter(po => po.id !== id); db.save().then(()=>this.render()); } },
+        viewPO(id) {
+            const po = db.purchaseOrders.find(x => x.id === id); if(!po) return;
+            let html = `
+                <div id="po-print-area" style="padding:15px;">
+                    <div style="text-align:center; margin-bottom:15px;">
+                        ${db.settings.logoBase64 ? `<img src="${db.settings.logoBase64}" style="max-height:80px;">` : ''}
+                        <h2 style="margin:5px 0;">${db.settings.companyName || 'Intersment'}</h2><hr>
+                    </div>
+                    <h3>طلبية شراء (Purchase Order) <br> رقم: ${po.serial}</h3>
+                    <p><strong>طالبة من مخزن:</strong> ${po.warehouse} <br> <strong>تاريخ الطلب:</strong> ${po.date} <br> <strong>بواسطة:</strong> ${po.createdBy}</p>
+                    
+                    <div class="no-print" style="margin-bottom:10px;">
+                        <button onclick="poManager.exportPOExcel('${po.id}')" class="btn-excel btn-small"><i class="fa-solid fa-file-excel"></i> Excel</button>
+                        <button onclick="poManager.exportPOPDF('${po.id}')" class="btn-pdf btn-small"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                    </div>
+
+                    <table border="1" style="width:100%; border-collapse:collapse; margin:15px 0; text-align:center;" id="po-table-export">
+                        <thead style="background:#eee;"><tr><th>م</th><th>الصنف</th><th>الكمية المطلوبة</th></tr></thead>
+                        <tbody>${po.items.map((i, idx) => `<tr><td>${idx+1}</td><td>${i.itemName}</td><td style="font-weight:bold;">${i.reqQty}</td></tr>`).join('')}</tbody>
+                    </table>
+                </div>`;
+            document.getElementById('modal-body').innerHTML = html; document.getElementById('modal-overlay').style.display = 'flex';
+        },
+        exportPOExcel(id) {
+            const po = db.purchaseOrders.find(x => x.id === id); if(!po) return;
+            let data = po.items.map((i, idx) => ({ 'م': idx+1, 'الصنف': i.itemName, 'الكمية المطلوبة': i.reqQty }));
+            const worksheet = XLSX.utils.json_to_sheet(data); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, "PO"); XLSX.writeFile(workbook, `PO_${po.serial}.xlsx`);
+        },
+        exportPOPDF(id) {
+            const po = db.purchaseOrders.find(x => x.id === id); if(!po) return;
+            const element = document.getElementById('po-print-area');
+            let opt = { margin: 0.5, filename: `PO_${po.serial}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+            html2pdf().set(opt).from(element).save();
+        }
+    };
+
+    // --- Warehouse Manager ---
+    const warehouseManager = {
+        add() { const name = document.getElementById('wh-name').value.trim(); if(!name) return; if(db.warehouses.includes(name)) return alert("مسجل بالفعل."); db.warehouses.push(name); db.save().then(() => { app.updateWarehouseSelector(); this.renderList(); usersManager.render(); document.getElementById('wh-name').value = ''; }); },
+        renderList() {
+            const ul = document.getElementById('wh-list'); ul.innerHTML = '';
+            db.warehouses.forEach((w, idx) => {
+                const li = document.createElement('li'); li.style = "background:white; padding:15px; border-radius:5px; border:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;";
+                let actBtns = (w !== "المخزن الرئيسي" && app.hasPerm('admin')) ? `<button onclick="warehouseManager.edit('${w}')" class="btn-warning btn-small"><i class="fa-solid fa-pen"></i></button> <button onclick="warehouseManager.del('${w}')" class="btn-danger btn-small"><i class="fa-solid fa-trash"></i></button>` : '';
+                li.innerHTML = `<strong>${w}</strong> <div>${actBtns}</div>`; ul.appendChild(li);
+            });
+        },
+        edit(oldName) {
+            let newName = prompt("أدخل الاسم الجديد للمخزن/الموقع:", oldName);
+            if(!newName || newName.trim() === "" || newName === oldName || db.warehouses.includes(newName)) return;
+            newName = newName.trim();
+            
+            db.warehouses[db.warehouses.indexOf(oldName)] = newName;
+            
+            db.items.forEach(i => {
+                if(i.openingBalances[oldName] !== undefined) {
+                    i.openingBalances[newName] = i.openingBalances[oldName];
+                    delete i.openingBalances[oldName];
+                }
+            });
+            
+            db.permits.forEach(p => {
+                if(p.warehouse === oldName) p.warehouse = newName;
+                if(p.locMain === oldName) p.locMain = newName;
+            });
+
+            db.purchaseOrders.forEach(po => { if(po.warehouse === oldName) po.warehouse = newName; });
+
+            db.users.forEach(u => {
+                if(u.allowedWarehouses && u.allowedWarehouses.includes(oldName)) {
+                    u.allowedWarehouses[u.allowedWarehouses.indexOf(oldName)] = newName;
+                }
+            });
+
+            if(db.settings.activeWarehouse === oldName) db.settings.activeWarehouse = newName;
+            db.save().then(() => { app.updateWarehouseSelector(); this.renderList(); });
+        },
+        del(name) { 
+            if(name === db.settings.activeWarehouse) return alert("لا يمكنك حذفه أثناء تصفحه."); 
+            if(confirm(`حذف جهة "${name}"؟ سيتم حذفه من النظام ومن صلاحيات أي مستخدم مرتبط به.`)) { 
+                db.warehouses = db.warehouses.filter(w => w !== name); 
+                db.users.forEach(u => { if(u.allowedWarehouses) u.allowedWarehouses = u.allowedWarehouses.filter(aw => aw !== name); });
+                db.save().then(() => { app.updateWarehouseSelector(); this.renderList(); usersManager.render(); });
+            } 
+        }
+    };
+
+    // --- Permits Manager ---
+    const permitsManager = {
+        tempItems: [],
+        populateSelects() {
+            const mainSel = document.getElementById('p-main-loc');
+            if(mainSel) { 
+                mainSel.innerHTML = '<option value="">اختر الجهة الأخرى (مورد/موقع/مخزن)...</option>'; 
+                db.warehouses.forEach(w => { 
+                    if(w !== db.settings.activeWarehouse) mainSel.add(new Option(w, w)); 
+                }); 
+            }
+            const filterLoc = document.getElementById('filter-p-loc');
+            if(filterLoc) {
+                const currentVal = filterLoc.value;
+                filterLoc.innerHTML = '<option value="all">تصفية بكل الجهات (الموردين/المخازن)</option>';
+                db.warehouses.forEach(w => { 
+                    if(w !== db.settings.activeWarehouse) filterLoc.add(new Option(w, w)); 
+                });
+                if(Array.from(filterLoc.options).some(o => o.value === currentVal)) filterLoc.value = currentVal;
+            }
+
+            const poSel = document.getElementById('p-linked-po');
+            if(poSel) {
+                poSel.innerHTML = '<option value="">بدون ربط بطلبية شراء</option>';
+                db.purchaseOrders.filter(po => po.warehouse === db.settings.activeWarehouse).forEach(po => {
+                    poSel.add(new Option(`طلبية: ${po.serial} (${po.date})`, po.id));
+                });
+            }
+        },
+        toggleNewBook() {
+            if(document.getElementById('p-is-new-book').checked) {
+                document.getElementById('p-serial').value = '';
+                document.getElementById('p-serial').focus();
+            } else {
+                this.onTypeChange();
+            }
+        },
+        onTypeChange() {
+            const type = document.getElementById('p-type').value; 
+            const mainSel = document.getElementById('p-main-loc');
+            
+            if(mainSel && mainSel.options.length > 0) {
+                if(type === 'transfer') mainSel.options[0].text = "اختر المخزن المحول إليه..."; 
+                else if(type === 'add' || type === 'supplier_return') mainSel.options[0].text = "اختر المورد...";
+                else if(type === 'site_issue') mainSel.options[0].text = "اختر موقع الصرف...";
+                else if(type === 'machine_deduct') mainSel.options[0].text = "اختر المعدة...";
+                else if(type === 'damage') mainSel.options[0].text = "ملاحظات التلف/الموقع (اختياري)...";
+                else if(type === 'repair') mainSel.options[0].text = "جهة الصيانة (اختياري)...";
+            }
+
+            document.getElementById('po-link-row').style.display = (type === 'add') ? 'flex' : 'none';
+
+            if(document.getElementById('p-edit-id').value || document.getElementById('p-transfer-source-id').value) return; 
+            if(document.getElementById('p-is-new-book') && document.getElementById('p-is-new-book').checked) return;
+
+            const wh = db.settings.activeWarehouse; 
+            const lastPermit = db.permits.filter(p => p.warehouse === wh && p.type === type).sort((a,b) => parseInt(b.id) - parseInt(a.id))[0];
+            document.getElementById('p-serial').value = lastPermit ? parseInt(lastPermit.serial) + 1 : 1;
+        },
+        onItemSelect() { const item = db.items.find(i => i.name === document.getElementById('p-item-input').value); if(item) document.getElementById('p-item-unit').value = item.unit; },
+        addItemToPermit() {
+            const item = db.items.find(i => i.name === document.getElementById('p-item-input').value); const qty = parseFloat(document.getElementById('p-item-qty').value);
+            if(!item || !qty || qty <= 0) return alert("تأكد من الصنف والكمية.");
+            this.tempItems.push({ itemId: item.id, itemName: item.name, qty: qty }); this.renderTempItems();
+            document.getElementById('p-item-input').value = ''; document.getElementById('p-item-qty').value = ''; document.getElementById('p-item-unit').value = '';
+        },
+        updateTempQty(idx, val) { const newQty = parseFloat(val); if(newQty > 0) this.tempItems[idx].qty = newQty; else alert("الكمية غير صحيحة"); },
+        renderTempItems() {
+            const tbody = document.querySelector('#current-permit-items tbody'); tbody.innerHTML = '';
+            this.tempItems.forEach((row, idx) => {
+                tbody.innerHTML += `<tr><td>${row.itemName}</td><td><input type="number" class="qty-input-table" value="${row.qty}" onchange="permitsManager.updateTempQty(${idx}, this.value)" min="0.01" step="0.01"></td><td><button onclick="permitsManager.remTemp(${idx})" class="btn-danger btn-small"><i class="fa-solid fa-xmark"></i></button></td></tr>`;
+            });
+        },
+        remTemp(idx) { this.tempItems.splice(idx, 1); this.renderTempItems(); },
+        async savePermit() {
+            const wh = db.settings.activeWarehouse, type = document.getElementById('p-type').value;
+            const serial = parseInt(document.getElementById('p-serial').value), date = document.getElementById('p-date').value;
+            let otherLoc = document.getElementById('p-main-loc').value; 
+            const subSerial = document.getElementById('p-sub-serial').value;
+            const editId = document.getElementById('p-edit-id').value, transferSourceId = document.getElementById('p-transfer-source-id').value;
+            const linkedPO = document.getElementById('p-linked-po') ? document.getElementById('p-linked-po').value : '';
+
+            if(!serial || !date || this.tempItems.length === 0) return alert("البيانات ناقصة.");
+            if(!otherLoc && type !== 'damage' && type !== 'repair') return alert("يجب اختيار الجهة الأخرى من القائمة المنسدلة للضرورة المحاسبية للتقارير.");
+            if(!otherLoc) otherLoc = "داخلي"; // Default for damage/repair if empty
+
+            let existingImgMain = null, existingImgSub = null, status = 'completed';
+            if(editId) { const existing = db.permits.find(p => p.id === editId); if(existing) { existingImgMain = existing.imgMain; existingImgSub = existing.imgSub; status = existing.status || 'completed'; } } 
+            else { if(type === 'transfer') status = 'pending'; }
+
+            const newImgMain = await this.processImage(document.getElementById('p-img-main').files[0]);
+            const newImgSub = await this.processImage(document.getElementById('p-img-sub').files[0]);
+
+            const permit = {
+                id: editId || Date.now().toString(), warehouse: wh, type, serial, date, 
+                locMain: otherLoc, locSub: '', subSerial, status, linkedPO: (type === 'add' ? linkedPO : ''),
+                items: [...this.tempItems], imgMain: newImgMain || existingImgMain, imgSub: newImgSub || existingImgSub, createdBy: db.currentUser.username
+            };
+
+            if(editId) {
+                const idx = db.permits.findIndex(p => p.id === editId); if(idx !== -1) db.permits[idx] = permit; 
+                db.save().then(() => alert("تم تحديث الإذن في السحابة بنجاح"));
+            } else {
+                db.permits.push(permit);
+                
+                if(transferSourceId) {
+                    const t = db.permits.find(p => p.id === transferSourceId);
+                    if(t) {
+                        t.status = 'completed'; 
+                        let hasDiff = false;
+                        let diffDetails = [];
+                        
+                        t.items.forEach(origItem => {
+                            let rcvQty = this.tempItems.find(x => x.itemId === origItem.itemId)?.qty || 0;
+                            if(origItem.qty !== rcvQty) {
+                                hasDiff = true;
+                                diffDetails.push(`- <strong>${origItem.itemName}</strong> (مُرسل: ${origItem.qty} ، مُستلم: ${rcvQty})`);
+                            }
+                        });
+                        
+                        this.tempItems.forEach(rcvItem => {
+                            if(!t.items.find(x => x.itemId === rcvItem.itemId)) {
+                                hasDiff = true;
+                                diffDetails.push(`- <strong>${rcvItem.itemName}</strong> (مُرسل: 0 ، مُستلم: ${rcvItem.qty})`);
+                            }
+                        });
+
+                        if(hasDiff) {
+                            if(!db.notifications) db.notifications = [];
+                            db.notifications.push({
+                                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                                warehouse: t.warehouse,
+                                message: `تنبيه: مخزن <span style="color:var(--accent); font-weight:bold;">${wh}</span> قام باستلام كميات مختلفة في إذن التحويل الصادر منك رقم <span style="color:var(--danger); font-weight:bold;">${t.serial}</span>.<br><br><strong>التفاصيل:</strong><br>${diffDetails.join('<br>')}`,
+                                date: new Date().toISOString().slice(0,10),
+                                isRead: false
+                            });
+                            db.save().then(() => {
+                                alert("تم الحفظ واستلام الأصناف بنجاح.\n\nتنبيه: لقد قمت باستلام كميات مختلفة عن المُرسلة، تم إرسال إشعار بذلك للمخزن المُحَول لمراجعة الإذن لديه.");
+                            });
+                        } else { 
+                            db.save().then(() => alert("تم حفظ الإذن واستلام كامل الكمية بدون أي فروق.")); 
+                        }
+                    }
+                } else { 
+                    db.save().then(() => {
+                        let msg = "تم حفظ الإذن في السحابة بنجاح.";
+                        if(linkedPO) msg += "\nتم تحديث الكميات المنفذة في طلبية الشراء المرتبطة.";
+                        alert(msg);
+                    }); 
+                }
+            }
+            this.cancelEdit(); app.checkPendingTransfersBadge(); app.checkNotifications();
+        },
+        cancelEdit() {
+            document.getElementById('p-edit-id').value = ""; document.getElementById('p-transfer-source-id').value = "";
+            document.getElementById('btn-save-permit').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> حفظ الإذن بالكامل`; 
+            document.getElementById('btn-cancel-permit').style.display = "none"; document.getElementById('p-serial').disabled = false; this.tempItems = []; this.renderTempItems();
+            if(document.getElementById('p-is-new-book')) document.getElementById('p-is-new-book').checked = false;
+            document.getElementById('p-sub-serial').value = ""; document.getElementById('p-main-loc').value = ""; document.getElementById('p-img-main').value = ""; document.getElementById('p-img-sub').value = ""; 
+            if(document.getElementById('p-linked-po')) document.getElementById('p-linked-po').value = "";
+            this.onTypeChange();
+        },
+        processImage(file) { return new Promise((resolve) => { if(!file) return resolve(null); const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.readAsDataURL(file); }); },
+        importPermitsExcel(input) {
+            const file = input.files[0]; if(!file) return; const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, {type: 'array'});
+                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); 
+                    const typeMap = { 'إذن إضافة': 'add', 'اضافة': 'add', 'إضافة': 'add', 'إذن صرف موقع': 'site_issue', 'صرف موقع': 'site_issue', 'صرف': 'site_issue', 'إذن خصم معدة': 'machine_deduct', 'خصم معدة': 'machine_deduct', 'إذن تحويل': 'transfer', 'تحويل': 'transfer', 'تحويل صادر': 'transfer', 'إذن ارتجاع مورد': 'supplier_return', 'ارتجاع مورد': 'supplier_return', 'تسجيل تلف': 'damage', 'تلف': 'damage', 'تسجيل صيانة': 'repair', 'صيانة': 'repair' };
+                    const groups = {};
+
+                    rows.forEach(row => {
+                        const typeRaw = row['نوع الاذن'] || row['Type']; const serial = row['رقم الاذن الاساسي'] || row['Serial'];
+                        if(!typeRaw || !serial) return; 
+                        const type = typeMap[typeRaw.trim()] || 'add'; const key = `${type}_${serial}`;
+
+                        if(!groups[key]) {
+                            const rawLoc = row['الجهة الاخرى'] || row['الموقع الاساسي'] || row['Main Loc'] || 'داخلي';
+                            if(rawLoc && rawLoc !== 'داخلي' && !db.warehouses.includes(rawLoc)) { db.warehouses.push(rawLoc); } 
+
+                            groups[key] = {
+                                id: Date.now() + Math.random().toString(), warehouse: db.settings.activeWarehouse, type: type, serial: serial,
+                                date: row['التاريخ'] || row['Date'] || new Date().toISOString().slice(0,10), locMain: rawLoc, locSub: '',
+                                subSerial: row['رقم الاذن الفرعي'] || row['Sub Serial'] || '', status: type==='transfer'?'pending':'completed', items: [], createdBy: db.currentUser.username
+                            };
+                        }
+
+                        const itemName = row['الصنف'] || row['Item']; const qty = parseFloat(row['الكمية'] || row['Qty']);
+                        if(itemName && qty) {
+                            let itemObj = db.items.find(i => i.name === itemName);
+                            if(!itemObj) { itemObj = { id: Date.now() + Math.random().toString(), name: itemName, unit: row['الوحدة'] || row['Unit'] || 'عدد', type: db.settings.types[0], group: db.settings.groups[0], reorderPoint: 0, openingBalances: {} }; db.items.push(itemObj); }
+                            groups[key].items.push({ itemId: itemObj.id, itemName: itemObj.name, qty: qty });
+                        }
+                    });
+
+                    const newPermits = Object.values(groups); db.permits.push(...newPermits); 
+                    db.save().then(() => {
+                        alert(`تم استيراد ${newPermits.length} إذن ورفعهم للسحابة بنجاح.`); app.updateWarehouseSelector(); this.renderArchive();
+                    });
+                } catch(err) { alert("حدث خطأ في قراءة ملف الإكسيل."); }
+                input.value = '';
+            }; reader.readAsArrayBuffer(file);
+        },
+        renderArchive() {
+            const wh = db.settings.activeWarehouse;
+            const typeFilter = document.getElementById('filter-p-type').value;
+            const serialFilter = document.getElementById('search-p-serial').value;
+            const locFilter = document.getElementById('filter-p-loc').value;
+            const sortMode = document.getElementById('filter-p-sort') ? document.getElementById('filter-p-sort').value : 'date_desc';
+            const dateFrom = document.getElementById('filter-date-from').value;
+            const dateTo = document.getElementById('filter-date-to').value;
+            
+            const container = document.getElementById('permits-archive-container'); container.innerHTML = '';
+
+            let filtered = db.permits.filter(p => p.warehouse === wh && (typeFilter === 'all' || p.type === typeFilter));
+            if(serialFilter) filtered = filtered.filter(p => p.serial.toString().includes(serialFilter));
+            if(locFilter && locFilter !== 'all') filtered = filtered.filter(p => p.locMain === locFilter);
+            if(dateFrom) filtered = filtered.filter(p => new Date(p.date) >= new Date(dateFrom));
+            if(dateTo) filtered = filtered.filter(p => new Date(p.date) <= new Date(dateTo));
+
+            filtered.sort((a,b) => {
+                if(sortMode === 'date_desc') return new Date(b.date) - new Date(a.date) || parseInt(b.serial) - parseInt(a.serial);
+                if(sortMode === 'date_asc') return new Date(a.date) - new Date(b.date) || parseInt(a.serial) - parseInt(b.serial);
+                if(sortMode === 'serial_asc') return parseInt(a.serial) - parseInt(b.serial);
+                if(sortMode === 'serial_desc') return parseInt(b.serial) - parseInt(a.serial);
+                return 0;
+            }).forEach(p => {
+                const div = document.createElement('div');
+                let statusBadge = (p.type === 'transfer' && p.status === 'pending') ? `<span class="badge-pending">بانتظار استلام الطرف الآخر</span>` : '';
+                let poBadge = p.linkedPO ? `<span class="badge-pending" style="background:#e8f8f5; border-color:var(--success); color:var(--success);"><i class="fa-solid fa-link"></i> مرتبط بطلبية</span>` : '';
+                let userTag = p.createdBy ? `<span class="user-tag no-print"><i class="fa-solid fa-user"></i> ${p.createdBy}</span>` : '';
+                let editBtns = app.hasPerm('edit') ? `<button class="btn-warning btn-small" onclick="permitsManager.editPermit('${p.id}')"><i class="fa-solid fa-pen"></i> تعديل</button> <button class="btn-danger btn-small" onclick="permitsManager.deletePermit('${p.id}')"><i class="fa-solid fa-trash"></i></button>` : '';
+
+                let typeStyle = "";
+                if(p.type === 'damage') typeStyle = "color:red;";
+                if(p.type === 'repair') typeStyle = "color:green;";
+
+                div.style = "border:1px solid #ddd; margin:10px 0; padding:15px; background:#fff; border-radius:5px;";
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <div><strong style="${typeStyle}">${this.getTypeName(p.type)}</strong> | الإذن: <span style="color:var(--primary); font-weight:bold; font-size:1.1em;">${p.serial}</span> | التاريخ: ${p.date} ${statusBadge} ${poBadge} ${userTag} <br>
+                        <small style="color:#7f8c8d;">الجهة المعنية: ${p.locMain}</small></div>
+                        <div><button class="btn-primary btn-small" onclick="permitsManager.viewPermit('${p.id}')"><i class="fa-solid fa-eye"></i> عرض</button> ${editBtns}</div>
+                    </div>`;
+                container.appendChild(div);
+            });
+        },
+        editPermit(id) {
+            const p = db.permits.find(x => x.id === id); if(!p) return;
+            app.navigate('permits_entry');
+            document.getElementById('p-edit-id').value = p.id; document.getElementById('p-type').value = p.type; this.onTypeChange();
+            document.getElementById('p-serial').value = p.serial; document.getElementById('p-serial').disabled = true; document.getElementById('p-date').value = p.date;
+            
+            const mainSel = document.getElementById('p-main-loc');
+            if(!Array.from(mainSel.options).some(o => o.value === p.locMain) && p.locMain !== 'داخلي') { mainSel.add(new Option(p.locMain, p.locMain)); db.warehouses.push(p.locMain); db.save(); }
+            mainSel.value = p.locMain;
+            
+            if(p.type === 'add' && document.getElementById('p-linked-po')) { document.getElementById('p-linked-po').value = p.linkedPO || ''; }
+            
+            document.getElementById('p-sub-serial').value = p.subSerial || '';
+            this.tempItems = JSON.parse(JSON.stringify(p.items)); this.renderTempItems();
+            document.getElementById('btn-save-permit').innerHTML = `<i class="fa-solid fa-check"></i> حفظ التعديلات`; document.getElementById('btn-cancel-permit').style.display = "block"; window.scrollTo(0,0);
+        },
+        getTypeName(type) { const map = { 'add': 'إضافة', 'site_issue': 'صرف موقع', 'machine_deduct': 'خصم معدة', 'transfer': 'تحويل صادر', 'supplier_return': 'ارتجاع مورد', 'damage': 'تسجيل تلف', 'repair': 'صيانة وإصلاح' }; return map[type] || type; },
+        viewPermit(id) {
+            const p = db.permits.find(x => x.id === id); if(!p) return;
+            let html = `
+                <div id="permit-print-area" style="padding:15px;">
+                    <div style="text-align:center; margin-bottom:15px;" class="print-header">
+                        ${db.settings.logoBase64 ? `<img src="${db.settings.logoBase64}" style="max-height:80px;">` : ''}
+                        <h2 style="margin:5px 0;">${db.settings.companyName || 'Intersment'}</h2><hr>
+                    </div>
+                    <h3>${this.getTypeName(p.type)} رقم ${p.serial} <span style="font-size:12px; font-weight:normal;" class="no-print">(${p.subSerial||''})</span></h3>
+                    <p><strong>المخزن:</strong> ${p.warehouse} <br> <strong>التاريخ:</strong> ${p.date} <br> <strong>الجهة المعنية:</strong> ${p.locMain}</p>
+                    
+                    <div class="no-print" style="margin-bottom:10px;">
+                        <button onclick="window.print()" class="btn-primary btn-small"><i class="fa-solid fa-print"></i> طباعة (عادية)</button>
+                        <button onclick="permitsManager.exportPermitPDF('${p.id}')" class="btn-pdf btn-small"><i class="fa-solid fa-file-pdf"></i> تصدير الإذن PDF</button>
+                        ${app.hasPerm('edit') ? `<button class="btn-warning btn-small" onclick="permitsManager.editPermit('${p.id}'); document.getElementById('modal-overlay').style.display='none';"><i class="fa-solid fa-pen"></i> تعديل</button>`:''}
+                    </div>
+
+                    <table border="1" style="width:100%; border-collapse:collapse; margin:15px 0; text-align:center;">
+                        <thead style="background:#eee;"><tr><th>م</th><th>الصنف</th><th>الكمية</th></tr></thead>
+                        <tbody>${p.items.map((i, idx) => `<tr><td>${idx+1}</td><td>${i.itemName}</td><td style="font-weight:bold;">${i.qty}</td></tr>`).join('')}</tbody>
+                    </table>
+                    <div class="permit-view-images no-print" style="display:flex; gap:10px;">
+                        ${p.imgMain ? `<div style="flex:1;"><p>المرفق الأساسي:</p><img src="${p.imgMain}" style="max-width:100%;"></div>` : ''}
+                        ${p.imgSub ? `<div style="flex:1;"><p>المرفق الفرعي:</p><img src="${p.imgSub}" style="max-width:100%;"></div>` : ''}
+                    </div>
+                </div>`;
+            document.getElementById('modal-body').innerHTML = html; document.getElementById('modal-overlay').style.display = 'flex';
+        },
+        exportPermitPDF(id) {
+            const p = db.permits.find(x => x.id === id); if(!p) return;
+            const element = document.createElement('div'); element.style.padding = '20px'; element.style.fontFamily = 'Tahoma';
+            element.innerHTML = `
+                <div style="text-align:center; margin-bottom:15px;">
+                    ${db.settings.logoBase64 ? `<img src="${db.settings.logoBase64}" style="max-height:80px;">` : ''}
+                    <h2 style="margin:5px 0;">${db.settings.companyName || 'Intersment'}</h2><hr>
+                </div>
+                <h3 style="text-align:center;">${this.getTypeName(p.type)} رقم ${p.serial}</h3>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <p><strong>المخزن المُصدر:</strong> ${p.warehouse}</p>
+                    <p><strong>التاريخ:</strong> ${p.date}</p>
+                </div>
+                <p><strong>الجهة المعنية:</strong> ${p.locMain}</p>
+                <table border="1" style="width:100%; border-collapse:collapse; margin:15px 0; text-align:center; font-size:14px;">
+                    <thead style="background:#eee;"><tr><th>م</th><th>الصنف</th><th>الكمية</th></tr></thead>
+                    <tbody>${p.items.map((i, idx) => `<tr><td>${idx+1}</td><td>${i.itemName}</td><td style="font-weight:bold;">${i.qty}</td></tr>`).join('')}</tbody>
+                </table>
+            `;
+            let opt = { margin: 0.5, filename: `Permit_${p.serial}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+            html2pdf().set(opt).from(element).save();
+        },
+        deletePermit(id) { if(confirm("حذف الإذن سيقوم بعكس الكميات والتأثير على الرصيد النهائي. متأكد؟")) { db.permits = db.permits.filter(p => p.id !== id); db.save().then(() => { this.renderArchive(); app.checkPendingTransfersBadge(); }); } },
+        showLastSerials() {
+            const wh = db.settings.activeWarehouse;
+            let types = ['add', 'site_issue', 'machine_deduct', 'transfer', 'supplier_return', 'damage', 'repair'];
+            let html = `<div style="padding:15px; text-align:right;">
+                <h3><i class="fa-solid fa-list-ol" style="color:var(--accent);"></i> آخر تسلسل للأذون في مخزن: <span style="color:var(--primary);">${wh}</span></h3>
+                <table border="1" style="width:100%; text-align:center; border-collapse:collapse; margin-top:15px;">
+                    <thead style="background:#eee;"><tr><th>نوع الإذن</th><th>آخر رقم تسلسلي مسجل</th></tr></thead>
+                    <tbody>`;
+            
+            types.forEach(type => {
+                let lastPermit = db.permits.filter(p => p.warehouse === wh && p.type === type).sort((a,b) => parseInt(b.id) - parseInt(a.id))[0];
+                let lastSerial = lastPermit ? lastPermit.serial : '<span style="color:#7f8c8d;">لا يوجد</span>';
+                html += `<tr><td><strong>${this.getTypeName(type)}</strong></td><td style="font-weight:bold; font-size:1.1em; color:var(--primary);">${lastSerial}</td></tr>`;
+            });
+            html += `</tbody></table></div>`;
+            document.getElementById('modal-body').innerHTML = html; 
+            document.getElementById('modal-overlay').style.display = 'flex';
+        },
+        exportArchiveExcel() {
+            const wh = db.settings.activeWarehouse;
+            const typeFilter = document.getElementById('filter-p-type').value;
+            const serialFilter = document.getElementById('search-p-serial').value;
+            const locFilter = document.getElementById('filter-p-loc').value;
+            const dateFrom = document.getElementById('filter-date-from').value;
+            const dateTo = document.getElementById('filter-date-to').value;
+
+            let filtered = db.permits.filter(p => p.warehouse === wh);
+            if(typeFilter !== 'all') filtered = filtered.filter(p => p.type === typeFilter);
+            if(serialFilter) filtered = filtered.filter(p => p.serial.toString().includes(serialFilter));
+            if(locFilter && locFilter !== 'all') filtered = filtered.filter(p => p.locMain === locFilter);
+            if(dateFrom) filtered = filtered.filter(p => new Date(p.date) >= new Date(dateFrom));
+            if(dateTo) filtered = filtered.filter(p => new Date(p.date) <= new Date(dateTo));
+
+            let dataToExport = [];
+            filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(p => {
+                p.items.forEach(item => {
+                    dataToExport.push({
+                        'نوع الاذن': this.getTypeName(p.type),
+                        'رقم الاذن الاساسي': p.serial,
+                        'رقم الاذن الفرعي': p.subSerial || '',
+                        'التاريخ': p.date,
+                        'الجهة الاخرى': p.locMain,
+                        'الصنف': item.itemName,
+                        'الكمية': item.qty,
+                        'المستخدم': p.createdBy || '',
+                        'الحالة': p.status === 'pending' ? 'معلق' : 'مكتمل'
+                    });
+                });
+            });
+
+            if(dataToExport.length === 0) return alert("لا توجد بيانات لتصديرها.");
+            
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Permits_Archive");
+            XLSX.writeFile(workbook, `Permits_Archive_${wh}.xlsx`);
+        }
+    };
+
+    // --- Transfers Manager (Pending) ---
+    const transfersManager = {
+        renderPending() {
+            const wh = db.settings.activeWarehouse, container = document.getElementById('pending-transfers-container'); container.innerHTML = '';
+            const pending = db.permits.filter(p => p.type === 'transfer' && p.status === 'pending' && p.locMain === wh); 
+            if(pending.length === 0) { container.innerHTML = `<div style="padding:20px; text-align:center; background:#fff; border-radius:8px; border:1px solid #ddd;">لا توجد تحويلات معلقة.</div>`; return; }
+            pending.forEach(p => {
+                const div = document.createElement('div'); div.style = "border: 2px solid #f39c12; margin-bottom: 15px; padding: 20px; border-radius: 8px; background: #fdfbf7;";
+                div.innerHTML = `
+                    <h4 style="margin-top:0;"><i class="fa-solid fa-truck" style="color:#f39c12;"></i> وارد من: <span style="color:var(--primary);">${p.warehouse}</span></h4>
+                    <p>رقم إذن التحويل: <strong>${p.serial}</strong> | التاريخ: ${p.date}</p>
+                    <table border="1" style="width:100%; border-collapse:collapse; text-align:center; background:#fff; margin-bottom:15px;">
+                        <thead style="background:#eee;"><tr><th>الصنف</th><th>الكمية المحولة</th></tr></thead>
+                        <tbody>${p.items.map(i => `<tr><td>${i.itemName}</td><td style="font-weight:bold;">${i.qty}</td></tr>`).join('')}</tbody>
+                    </table>
+                    <button class="btn-success w-100" style="padding:10px; font-size:16px;" onclick="transfersManager.acceptTransfer('${p.id}')"><i class="fa-solid fa-check"></i> استلام وتعديل الكميات (إن لزم)</button>
+                `;
+                container.appendChild(div);
+            });
+        },
+        acceptTransfer(transferId) {
+            const t = db.permits.find(p => p.id === transferId); if(!t) return;
+            app.navigate('permits_entry');
+            document.getElementById('p-type').value = 'add'; permitsManager.onTypeChange();
+            document.getElementById('p-date').value = new Date().toISOString().slice(0,10);
+            
+            const mainSel = document.getElementById('p-main-loc');
+            if(!Array.from(mainSel.options).some(o => o.value === t.warehouse)) { mainSel.add(new Option(t.warehouse, t.warehouse)); db.warehouses.push(t.warehouse); db.save(); }
+            mainSel.value = t.warehouse;
+            
+            document.getElementById('p-sub-serial').value = "رقم إذن تحويل: " + t.serial; document.getElementById('p-transfer-source-id').value = t.id;
+            
+            // Unlink from PO during transfer receipt as requested.
+            if(document.getElementById('p-linked-po')) document.getElementById('p-linked-po').value = '';
+
+            permitsManager.tempItems = JSON.parse(JSON.stringify(t.items)); permitsManager.renderTempItems();
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+    };
+
+    // --- Reports & Logic ---
+    const reports = {
+        calcItemStock(itemId) {
+            const item = db.items.find(i => i.id === itemId); if(!item) return { total: 0, damaged: 0, good: 0 };
+            const wh = db.settings.activeWarehouse; 
+            let total = parseFloat(item.openingBalances[wh]) || 0;
+            let damaged = 0;
+
+            db.permits.filter(p => p.warehouse === wh).forEach(p => {
+                const pItem = p.items.find(i => i.itemId === itemId);
+                if(pItem) { 
+                    if(p.type === 'add') total += pItem.qty; 
+                    if(p.type === 'site_issue' || p.type === 'transfer' || p.type === 'machine_deduct' || p.type === 'supplier_return') total -= pItem.qty; 
+                    if(p.type === 'damage') damaged += pItem.qty;
+                    if(p.type === 'repair') damaged -= pItem.qty;
+                }
+            });
+            return { total: total, damaged: damaged, good: total - damaged };
+        },
+        renderStock() {
+            const tbody = document.querySelector('#stock-table tbody'); tbody.innerHTML = ''; const wh = db.settings.activeWarehouse;
+            const nameFilter = document.getElementById('stock-filter-name').value.toLowerCase(), typeFilter = document.getElementById('stock-filter-type').value;
+            const groupFilter = document.getElementById('stock-filter-group').value; const onlyNegative = document.getElementById('stock-filter-negative').checked;
+
+            db.items.sort((a,b) => a.name.localeCompare(b.name)).forEach(item => {
+                if(nameFilter && !item.name.toLowerCase().includes(nameFilter)) return;
+                if(typeFilter !== 'all' && item.type !== typeFilter) return;
+                if(groupFilter !== 'كل المجموعات' && groupFilter !== '' && item.group !== groupFilter) return;
+
+                const stock = this.calcItemStock(item.id);
+                if(onlyNegative && stock.good >= 0) return;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${item.name}</td><td>${item.group}</td><td>${item.type}</td><td>${item.openingBalances[wh] || 0}</td>
+                    <td style="font-weight:bold; direction:ltr; text-align:right;">${stock.total}</td>
+                    <td style="font-weight:bold; color:var(--danger); direction:ltr; text-align:right;">${stock.damaged}</td>
+                    <td style="font-weight:bold; color:${stock.good < 0 ? '#e74c3c' : 'var(--success)'}; direction:ltr; text-align:right;">${stock.good}</td>`;
+                tbody.appendChild(tr);
+            });
+        },
+        renderDamage() {
+            const tbody = document.querySelector('#damage-table tbody'); tbody.innerHTML = ''; const wh = db.settings.activeWarehouse;
+            db.items.sort((a,b) => a.name.localeCompare(b.name)).forEach(item => {
+                let dmgTotal = 0, repTotal = 0;
+                db.permits.filter(p => p.warehouse === wh).forEach(p => {
+                    const pItem = p.items.find(i => i.itemId === item.id);
+                    if(pItem) {
+                        if(p.type === 'damage') dmgTotal += pItem.qty;
+                        if(p.type === 'repair') repTotal += pItem.qty;
+                    }
+                });
+                let currentDamaged = dmgTotal - repTotal;
+                if(currentDamaged > 0 || dmgTotal > 0) {
+                    tbody.innerHTML += `<tr><td>${item.name}</td><td style="color:var(--danger);">${dmgTotal}</td><td style="color:green;">${repTotal}</td><td style="font-weight:bold;">${currentDamaged}</td></tr>`;
+                }
+            });
+        },
+        exportDamage(type) {
+            const element = document.getElementById('damage-print-area'); document.getElementById('print-header-damage').style.display = 'block';
+            document.getElementById('print-header-damage').innerHTML = `${db.settings.logoBase64 ? `<img src="${db.settings.logoBase64}" style="max-height:80px; margin-bottom:10px;">` : ''}<h2>${db.settings.companyName || 'Intersment'}</h2><h3>تقرير التوالف والصيانة: ${db.settings.activeWarehouse}</h3>`;
+            
+            if(type === 'excel') { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('damage-table')), `Damage_Report_${db.settings.activeWarehouse}.xlsx`); document.getElementById('print-header-damage').style.display = 'none'; } 
+            else { 
+                let tr = element.querySelector('.table-responsive'); tr.style.maxHeight = 'none'; tr.style.overflow = 'visible'; tr.style.border = 'none';
+                let opt = { margin: 0.5, filename: `Damage_Report_${db.settings.activeWarehouse}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, scrollY: 0 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+                html2pdf().set(opt).from(element).save().then(()=> { document.getElementById('print-header-damage').style.display = 'none'; tr.style.maxHeight = '70vh'; tr.style.overflow = 'auto'; tr.style.border = '2px solid #bdc3c7'; }); 
+            }
+        },
+        generateItemCard() {
+            const item = db.items.find(i => i.name === document.getElementById('card-item-input').value), wh = db.settings.activeWarehouse;
+            if(!item) return alert("اختر صنف صحيح");
+
+            document.getElementById('card-title').innerText = "كارتة صنف: " + item.name; document.getElementById('card-wh-subtitle').innerHTML = "المخزن: <span style='color:var(--accent); font-weight:bold;'>" + wh + "</span>";
+            document.getElementById('print-header-card').innerHTML = `${db.settings.logoBase64 ? `<img src="${db.settings.logoBase64}" style="max-height:80px; margin-bottom:10px;">` : ''}<h2>${db.settings.companyName || 'Intersment'}</h2>`;
+            
+            const tbody = document.querySelector('#card-table tbody'); tbody.innerHTML = '';
+            let goodBalance = parseFloat(item.openingBalances[wh]) || 0; 
+            let damagedBalance = 0;
+            let transactions = [];
+            
+            db.permits.filter(p => p.warehouse === wh).forEach(p => {
+                const pi = p.items.find(i => i.itemId === item.id); if(pi) transactions.push({ p: p, qty: pi.qty });
+            });
+            transactions.sort((a,b) => new Date(a.p.date) - new Date(b.p.date));
+
+            tbody.innerHTML += `<tr style="background:#f4f6f7; font-weight:bold; color:var(--primary);"><td>-</td><td>-</td><td>-</td><td>رصيد افتتاحي</td><td>-</td><td style="color:green;">+${goodBalance}</td><td>-</td><td style="direction:ltr; text-align:right;">${goodBalance}</td><td class="no-print">-</td></tr>`;
+            transactions.forEach(t => {
+                const p = t.p; let goodEffect = "", dmgEffect = "";
+                
+                if(p.type === 'add') { goodBalance += t.qty; goodEffect = `<span style="color:green;">+${t.qty}</span>`; }
+                else if(p.type === 'damage') { goodBalance -= t.qty; damagedBalance += t.qty; goodEffect = `<span style="color:red;">-${t.qty}</span>`; dmgEffect = `<span style="color:red;">+${t.qty} (تالف)</span>`; }
+                else if(p.type === 'repair') { goodBalance += t.qty; damagedBalance -= t.qty; goodEffect = `<span style="color:green;">+${t.qty}</span>`; dmgEffect = `<span style="color:green;">-${t.qty} (تمت صيانته)</span>`; }
+                else { goodBalance -= t.qty; goodEffect = `<span style="color:red;">-${t.qty}</span>`; } // all other deducts
+
+                let actionBtn = `<button class="btn-primary btn-small no-print" onclick="permitsManager.viewPermit('${p.id}')"><i class="fa-solid fa-folder-open"></i></button>`;
+
+                tbody.innerHTML += `<tr><td>${p.date}</td><td>${p.serial}</td><td>${p.subSerial || '-'}</td><td>${permitsManager.getTypeName(p.type)}</td>
+                    <td>${p.locMain}</td><td style="font-weight:bold;">${goodEffect}</td><td style="font-weight:bold;">${dmgEffect}</td><td style="direction:ltr; text-align:right; font-weight:bold; background:#fbfdfc;">${goodBalance}</td><td class="no-print">${actionBtn}</td></tr>`;
+            });
+        },
+        renderConsumption() {
+            const tbody = document.querySelector('#consumption-table tbody'); tbody.innerHTML = ''; const wh = db.settings.activeWarehouse;
+            const dateFrom = document.getElementById('cons-date-from').value;
+            const dateTo = document.getElementById('cons-date-to').value;
+            const nameFilter = document.getElementById('cons-filter-name').value.toLowerCase();
+
+            db.items.filter(i => i.type === 'مستهلكات').sort((a,b) => a.name.localeCompare(b.name)).forEach(item => {
+                if(nameFilter && !item.name.toLowerCase().includes(nameFilter)) return;
+
+                let totalAdded = parseFloat(item.openingBalances[wh]) || 0, totalConsumedInPeriod = 0;
+                db.permits.filter(p => p.warehouse === wh).forEach(p => {
+                    const pi = p.items.find(x => x.itemId === item.id);
+                    if(pi) { 
+                        if(p.type === 'add') totalAdded += pi.qty; 
+                        if(p.type === 'site_issue' || p.type === 'machine_deduct') {
+                            let inPeriod = true;
+                            if(dateFrom && new Date(p.date) < new Date(dateFrom)) inPeriod = false;
+                            if(dateTo && new Date(p.date) > new Date(dateTo)) inPeriod = false;
+                            if(inPeriod) totalConsumedInPeriod += pi.qty;
+                        } 
+                    }
+                });
+                
+                if(totalAdded > 0 || totalConsumedInPeriod > 0) {
+                    const percent = totalAdded > 0 ? ((totalConsumedInPeriod / totalAdded) * 100).toFixed(1) : 0;
+                    tbody.innerHTML += `<tr><td>${item.name}</td><td>${this.calcItemStock(item.id).good}</td><td style="font-weight:bold; color:var(--danger);">${totalConsumedInPeriod}</td>
+                        <td><div style="background:#eee; height:12px; width:100px; border-radius:6px; overflow:hidden; display:inline-block; vertical-align:middle; border:1px solid #ccc;"><div style="background:var(--accent); height:100%; width:${Math.min(percent, 100)}%"></div></div> ${percent}%</td>
+                        <td>${percent < 10 ? `<span class="badge-danger">بطيء السحب</span>` : `<span style="color:green;">معدل طبيعي</span>`}</td></tr>`;
+                }
+            });
+        },
+        renderMovement() {
+            const tbody = document.querySelector('#movement-table tbody'); tbody.innerHTML = ''; const wh = db.settings.activeWarehouse;
+            db.items.sort((a,b) => a.name.localeCompare(b.name)).forEach(item => {
+                let added=0, out=0, trans=0, deduct=0, ret=0, dmg=0, rep=0;
+                db.permits.filter(p => p.warehouse === wh).forEach(p => {
+                    const pi = p.items.find(x => x.itemId === item.id);
+                    if(pi) { 
+                        if(p.type === 'add') added += pi.qty; 
+                        if(p.type === 'site_issue') out += pi.qty; 
+                        if(p.type === 'transfer') trans += pi.qty; 
+                        if(p.type === 'machine_deduct') deduct += pi.qty; 
+                        if(p.type === 'supplier_return') ret += pi.qty; 
+                        if(p.type === 'damage') dmg += pi.qty;
+                        if(p.type === 'repair') rep += pi.qty;
+                    }
+                });
+                const total = (parseFloat(item.openingBalances[wh]) || 0) + added - out - trans - deduct - ret;
+                tbody.innerHTML += `<tr><td>${item.name}</td><td>${item.unit}</td><td style="color:green;">${added}</td><td>${out}</td><td>${trans}</td><td>${deduct}</td><td>${ret}</td><td style="color:red;">${dmg}</td><td style="color:green;">${rep}</td><td style="direction:ltr; text-align:right; font-weight:bold;">${total}</td></tr>`;
+            });
+        },
+        populateTransfersLocSelects() {
+            const selects = ['trans-loc1', 'trans-loc2'];
+            selects.forEach(id => { const el = document.getElementById(id); if(el) { el.innerHTML = '<option value="">اختر المخزن...</option>'; db.warehouses.forEach(w => el.innerHTML += `<option value="${w}">${w}</option>`); } });
+        },
+        checkTransfers() {
+            const l1 = document.getElementById('trans-loc1').value, l2 = document.getElementById('trans-loc2').value; const div = document.getElementById('trans-results');
+            const dateFrom = document.getElementById('trans-date-from').value, dateTo = document.getElementById('trans-date-to').value;
+            if(!l1 || !l2) return alert("اختر مخزنين.");
+            
+            let transfers = db.permits.filter(p => p.type === 'transfer' && ((p.warehouse === l1 && p.locMain === l2) || (p.warehouse === l2 && p.locMain === l1)));
+            
+            if(dateFrom) transfers = transfers.filter(p => new Date(p.date) >= new Date(dateFrom));
+            if(dateTo) transfers = transfers.filter(p => new Date(p.date) <= new Date(dateTo));
+
+            div.innerHTML = `<h4 style="color:var(--primary);">المعاملات المتبادلة (${transfers.length} إذن)</h4>`;
+            if(transfers.length === 0) { div.innerHTML += '<p>لا توجد معاملات في هذه الفترة.</p>'; return; }
+            
+            let htmlStr = `<table border="1" style="width:100%; border-collapse:collapse; text-align:center;">
+                <thead style="background:#eee;"><tr><th>رقم الإذن</th><th>التاريخ</th><th>من مخزن</th><th>إلى مخزن</th><th>الحالة</th></tr></thead><tbody>`;
+            
+            transfers.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(p => {
+                let statusTxt = p.status === 'pending' ? '<span style="color:#e74c3c;">معلق</span>' : '<span style="color:#27ae60;">مكتمل</span>';
+                htmlStr += `<tr><td>${p.serial}</td><td>${p.date}</td><td>${p.warehouse}</td><td>${p.locMain}</td><td>${statusTxt}</td></tr>`;
+            });
+            htmlStr += `</tbody></table>`;
+            div.innerHTML += htmlStr;
+        },
+        exportTransfersPDF() {
+            const element = document.getElementById('trans-print-area');
+            const l1 = document.getElementById('trans-loc1').value, l2 = document.getElementById('trans-loc2').value;
+            if(!l1 || !l2) return alert("اختر مخزنين وبحث أولاً");
+            
+            document.getElementById('print-header-trans').style.display = 'block';
+            document.getElementById('print-header-trans').innerHTML = `${db.settings.logoBase64 ? `<img src="${db.settings.logoBase64}" style="max-height:80px; margin-bottom:10px;">` : ''}<h2>${db.settings.companyName || 'Intersment'}</h2><h3>تقرير المعاملات بين (${l1}) و (${l2})</h3>`;
+            
+            let opt = { margin: 0.5, filename: `Transfers_${l1}_${l2}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+            html2pdf().set(opt).from(element).save().then(()=> { document.getElementById('print-header-trans').style.display = 'none'; });
+        },
+        exportStock(type) {
+            const element = document.getElementById('stock-print-area'); document.getElementById('print-header-stock').style.display = 'block';
+            document.getElementById('print-header-stock').innerHTML = `${db.settings.logoBase64 ? `<img src="${db.settings.logoBase64}" style="max-height:80px; margin-bottom:10px;">` : ''}<h2>${db.settings.companyName || 'Intersment'}</h2><h3>أرصدة المخزن: ${db.settings.activeWarehouse}</h3>`;
+            
+            if(type === 'excel') { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('stock-table')), `Stock_${db.settings.activeWarehouse}.xlsx`); document.getElementById('print-header-stock').style.display = 'none'; } 
+            else { 
+                let tr = element.querySelector('.table-responsive'); tr.style.maxHeight = 'none'; tr.style.overflow = 'visible'; tr.style.border = 'none';
+                let opt = { margin: 0.5, filename: `Stock_${db.settings.activeWarehouse}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, scrollY: 0 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } };
+                html2pdf().set(opt).from(element).save().then(()=> { document.getElementById('print-header-stock').style.display = 'none'; tr.style.maxHeight = '70vh'; tr.style.overflow = 'auto'; tr.style.border = '2px solid #bdc3c7'; }); 
+            }
+        },
+        exportCard(type) {
+            const element = document.getElementById('card-print-area'); document.getElementById('print-header-card').style.display = 'block';
+            if(type === 'excel') { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('card-table')), `Item_Card.xlsx`); document.getElementById('print-header-card').style.display = 'none'; } 
+            else { 
+                let tr = element.querySelector('.table-responsive'); tr.style.maxHeight = 'none'; tr.style.overflow = 'visible';
+                let opt = { margin: 0.5, filename: `Item_Card.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, scrollY: 0 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } };
+                html2pdf().set(opt).from(element).save().then(()=> { document.getElementById('print-header-card').style.display = 'none'; }); 
+            }
+        }
+    };
+
+    const dashboard = {
+        render() {
+            const wh = db.settings.activeWarehouse, counts = { add:0, out:0, trans:0, deduct:0, ret:0 };
+            db.permits.filter(p => p.warehouse === wh).forEach(p => { if(p.type === 'add') counts.add++; if(p.type === 'site_issue') counts.out++; if(p.type === 'transfer') counts.trans++; if(p.type === 'machine_deduct') counts.deduct++; if(p.type === 'supplier_return') counts.ret++; });
+            document.getElementById('count-add').innerText = counts.add; document.getElementById('count-out').innerText = counts.out; document.getElementById('count-trans').innerText = counts.trans; document.getElementById('count-deduct').innerText = counts.deduct; document.getElementById('count-return').innerText = counts.ret;
+            
+            const ctx = document.getElementById('dashboardChart').getContext('2d');
+            if(window.dashChartInst) window.dashChartInst.destroy();
+            window.dashChartInst = new Chart(ctx, { type: 'bar', data: { labels: ['إضافة', 'صرف', 'تحويل', 'خصم', 'مرتجع'], datasets: [{ label: 'الأذون المسجلة', data: [counts.add, counts.out, counts.trans, counts.deduct, counts.ret], backgroundColor: ['#3498db', '#2ecc71', '#f39c12', '#e74c3c', '#9b59b6'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+        }
+    };
+
+    // التشغيل التلقائي عند فتح التطبيق (التحميل من السحابة أولاً)
+    document.addEventListener('DOMContentLoaded', () => { 
+        db.loadCloud(true).then(() => {
+            app.init();
+        });
+    });
+    </script>
+</body>
+</html>
