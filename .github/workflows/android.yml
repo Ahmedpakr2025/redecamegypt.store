@@ -29,13 +29,17 @@ jobs:
           cp index.html www/
           npm init -y
           npm install @capacitor/core @capacitor/android
-          npm install -D @capacitor/cli
+          npm install -D @capacitor/cli @capacitor/assets
           npx cap init "elboshy store" "com.elboshy.store" --web-dir www
           npx cap add android
+          mkdir -p assets
+          cp icon.png assets/icon.png
+          npx @capacitor/assets generate --android
 
       - name: بناء ملف الـ APK النهائي
         working-directory: ./android
         run: |
+          echo "configurations.all { resolutionStrategy { force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.22'; force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.22'; force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.22' } }" >> app/build.gradle
           chmod +x gradlew
           ./gradlew assembleDebug
 
