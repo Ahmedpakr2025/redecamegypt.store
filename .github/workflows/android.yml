@@ -17,29 +17,42 @@ jobs:
         with:
           node-version: '20'
 
-      - name: تجهيز بيئة Java للأندرويد
+      - name: تجهيز بيئة Java 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: تحويل الكود لتطبيق أندرويد
+      - name: بناء بيئة الأندرويد
         run: |
-          mkdir www
+          mkdir -p www
           cp index.html www/
           npm init -y
           npm install @capacitor/core @capacitor/android
           npm install -D @capacitor/cli @capacitor/assets
           npx cap init "elboshy store" "com.elboshy.store" --web-dir www
           npx cap add android
-          mkdir -p assets
-          cp icon.png assets/icon.png
-          npx @capacitor/assets generate --android
 
-      - name: بناء ملف الـ APK النهائي
+      - name: إضافة أيقونة التطبيق (اللوجو)
+        run: |
+          mkdir -p assets
+          cp icon.png assets/icon.png || true
+          npx @capacitor/assets generate --android || true
+
+      - name: الحل الجذري لمشكلة تعارض Kotlin
+        run: |
+          cat <<EOF >> android/build.gradle
+          allprojects {
+              configurations.all {
+                  exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+                  exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+              }
+          }
+          EOF
+
+      - name: استخراج ملف الـ APK النهائي
         working-directory: ./android
         run: |
-          echo "configurations.all { resolutionStrategy { force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.22'; force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.22'; force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.22' } }" >> app/build.gradle
           chmod +x gradlew
           ./gradlew assembleDebug
 
