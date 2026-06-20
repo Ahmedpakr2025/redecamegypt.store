@@ -1,0 +1,46 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: جلب الكود من المستودع
+        uses: actions/checkout@v4
+
+      - name: تجهيز بيئة Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: تجهيز بيئة Java للأندرويد
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: تحويل الكود لتطبيق أندرويد
+        run: |
+          mkdir www
+          cp index.html www/
+          npm init -y
+          npm install @capacitor/core @capacitor/android
+          npm install -D @capacitor/cli
+          npx cap init "elboshy store" "com.elboshy.store" --web-dir www
+          npx cap add android
+
+      - name: بناء ملف الـ APK النهائي
+        working-directory: ./android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: رفع التطبيق للتحميل
+        uses: actions/upload-artifact@v4
+        with:
+          name: elboshy-store-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
